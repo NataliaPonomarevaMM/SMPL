@@ -25,7 +25,6 @@
 #define FACE_INDEX_NUM smpl::face_index_num
 #endif // FACE_INDEX_NUM
 
-#include <cstdlib>
 #include <cstdint>
 
 namespace smpl {

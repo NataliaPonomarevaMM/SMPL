@@ -1,16 +1,16 @@
 #include <fstream>
-#include <experimental/filesystem>
+// #include <experimental/filesystem>
 #include <xtensor/xarray.hpp>
 #include <xtensor/xadapt.hpp>
 #include <xtensor/xjson.hpp>
-#include "exception.h"
-#include "smpl.h"
-#include "../def.h"
+#include "../../include/smpl/exception.h"
+#include "../../include/smpl/smpl.h"
+#include "../../include/def.h"
 
 namespace smpl {
 
     std::tuple<torch::Tensor, torch::Tensor, torch::Tensor, torch::Tensor>
-    SMPL::blendShape(torch::Tensor &beta, torch::Tensor &theta) {
+    SMPL::blendShape(torch::Tensor &beta, torch::Tensor &theta, torch::Tensor &restTheta) {
         torch::Tensor poseRotation = rodrigues(theta);// (N, 24, 3, 3)
         torch::Tensor restPoseRotation;
 
@@ -33,8 +33,7 @@ namespace smpl {
         torch::Tensor poseBlendShape = torch::tensordot(poseBlendCoeffs, m__poseBlendBasis, {1}, {2});// (N, 6890, 3)
         torch::Tensor shapeBlendShape = torch::tensordot(beta, m__shapeBlendBasis, {1}, {2}); // (N, 6890, 3)
 
-        return std::make_tuple<torch::Tensor, torch::Tensor, torch::Tensor, torch::Tensor>(
-                poseRotation, restPoseRotation, poseBlendShape, shapeBlendShape);
+        return {poseRotation, restPoseRotation, poseBlendShape, shapeBlendShape};
     }
 
     std::tuple<torch::Tensor, torch::Tensor> SMPL::regressJoints(torch::Tensor &shapeBlendShape,
@@ -44,13 +43,13 @@ namespace smpl {
         torch::Tensor joints = torch::tensordot(blendShape, m__jointRegressor, {1}, {1});// (N, 3, 24)
         joints = torch::transpose(joints, 1, 2);// (N, 24, 3)
 
-        return std::make_tuple<torch::Tensor, torch::Tensor>(restShape, joints);
+        return {restShape, joints};
     }
 
     torch::Tensor SMPL::transform(torch::Tensor &poseRotation, torch::Tensor &joints) {
         torch::Tensor zeros = torch::zeros({BATCH_SIZE, JOINT_NUM, 1, 3}, m__device);// (N, 24, 1, 3)
         torch::Tensor poseRotHomo = torch::cat({poseRotation, zeros}, 2);// (N, 24, 4, 3)
-        torch::Tensor localTransformations = localTransform(poseRotHomo);
+        torch::Tensor localTransformations = localTransform(poseRotHomo, joints);
         torch::Tensor globalTransformations = globalTransform(localTransformations);
 
         torch::Tensor eliminated = torch::matmul(TorchEx::indexing(globalTransformations, torch::IntList(),
@@ -79,7 +78,7 @@ namespace smpl {
         return homo2cart(verticesHomo);
     }
 
-    torch::Tensor BlendShape::rodrigues(torch::Tensor &theta) {
+    torch::Tensor SMPL::rodrigues(torch::Tensor &theta) {
         // rotation angles and axis
         torch::Tensor angles = torch::norm(theta, 2, {2}, true);// (N, 24, 1)
         torch::Tensor axes = theta / angles;// (N, 24, 3)
@@ -107,7 +106,7 @@ namespace smpl {
         return rotation;
     }
 
-    torch::Tensor SMPL::localTransform(torch::Tensor &poseRotHomo) {
+    torch::Tensor SMPL::localTransform(torch::Tensor &poseRotHomo, torch::Tensor &joints) {
         std::vector<torch::Tensor> translations;
         translations.push_back(TorchEx::indexing(joints, torch::IntList(), torch::IntList({0}), torch::IntList()));// [0, (N, 3)]
 

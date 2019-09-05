@@ -1,4 +1,4 @@
-#include "exception.h"
+#include "../../include/smpl/exception.h"
 
 namespace smpl {
     Exception::Exception(const std::string module, const std::string error,
@@ -40,7 +40,7 @@ namespace smpl {
         return *this;
     }
 
-    const char *Exception::what() const {
+    const char *Exception::what() const noexcept {
         return m__message.c_str();
     }
 } // namespace SMPL

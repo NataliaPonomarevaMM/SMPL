@@ -8,8 +8,8 @@
 #include "TorchEx.h"
 
 namespace smpl {
-    class SMPL final : public ::testing::Test{
-    private:
+    class SMPL : public ::testing::Test {
+    protected:
         torch::Device m__device; // Torch device to run the module, could be CPUs or GPUs.
 
         std::string m__modelPath; // Path to the JSON model file.
@@ -29,13 +29,13 @@ namespace smpl {
         torch::Tensor m__result_vertices;// result of launch
 
         std::tuple<torch::Tensor, torch::Tensor, torch::Tensor, torch::Tensor>
-        blendShape(torch::Tensor &beta, torch::Tensor &theta);
+        blendShape(torch::Tensor &beta, torch::Tensor &theta, torch::Tensor &restTheta);
         std::tuple<torch::Tensor, torch::Tensor> regressJoints(torch::Tensor &beta, torch::Tensor &theta);
         torch::Tensor transform(torch::Tensor &poseRotation, torch::Tensor &joints);
         torch::Tensor skinning(torch::Tensor &restShape, torch::Tensor &transformation);
 
         torch::Tensor rodrigues(torch::Tensor &theta);
-        torch::Tensor localTransform(torch::Tensor &poseRotHomo);
+        torch::Tensor localTransform(torch::Tensor &poseRotHomo, torch::Tensor &joints);
         torch::Tensor globalTransform(torch::Tensor &localTransformations);
         torch::Tensor cart2homo(torch::Tensor &cart);
         torch::Tensor homo2cart(torch::Tensor &homo);

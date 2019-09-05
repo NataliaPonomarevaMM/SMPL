@@ -1,11 +1,11 @@
 #include <fstream>
-#include <experimental/filesystem>
+// #include <experimental/filesystem>
 #include <xtensor/xarray.hpp>
 #include <xtensor/xadapt.hpp>
 #include <xtensor/xjson.hpp>
-#include "exception.h"
-#include "smpl.h"
-#include "../def.h"
+#include "../../include/smpl/exception.h"
+#include "../../include/smpl/smpl.h"
+#include "../../include/def.h"
 
 namespace smpl {
     SMPL::SMPL() :
@@ -32,13 +32,13 @@ namespace smpl {
         else
             throw smpl_error("SMPL", "Failed to fetch device index!");
 
-        std::experimental::filesystem::path path(modelPath);
-        if (std::experimental::filesystem::exists(path)) {
-            m__modelPath = modelPath;
-            m__vertPath = vertPath;
-        }
-        else
-            throw smpl_error("SMPL", "Failed to initialize model path!");
+//        std::experimental::filesystem::path path(modelPath);
+//        if (std::experimental::filesystem::exists(path)) {
+//            m__modelPath = modelPath;
+//            m__vertPath = vertPath;
+//        }
+//        else
+//            throw smpl_error("SMPL", "Failed to initialize model path!");
     }
 
     void SMPL::setDevice(const torch::Device &device) {
@@ -49,11 +49,11 @@ namespace smpl {
     }
 
     void SMPL::setModelPath(const std::string &modelPath) {
-        std::experimental::filesystem::path path(modelPath);
-        if (std::experimental::filesystem::exists(path))
-            m__modelPath = modelPath;
-        else
-            throw smpl_error("SMPL", "Failed to initialize model path!");
+//        std::experimental::filesystem::path path(modelPath);
+//        if (std::experimental::filesystem::exists(path))
+//            m__modelPath = modelPath;
+//        else
+//            throw smpl_error("SMPL", "Failed to initialize model path!");
     }
 
     void SMPL::setVertPath(const std::string &vertexPath) {
@@ -61,11 +61,11 @@ namespace smpl {
     }
 
     void SMPL::init() {
-        std::experimental::filesystem::path path(m__modelPath);
-        if (!std::experimental::filesystem::exists(path))
-            throw smpl_error("SMPL", "Cannot initialize a SMPL model!");
+//        std::experimental::filesystem::path path(m__modelPath);
+//        if (!std::experimental::filesystem::exists(path))
+//            throw smpl_error("SMPL", "Cannot initialize a SMPL model!");
 
-        std::ifstream file(path);
+        std::ifstream file(m__modelPath);
         file >> m__model;
 
         // face indices
@@ -112,7 +112,8 @@ namespace smpl {
             && theta.sizes() != torch::IntArrayRef({BATCH_SIZE, JOINT_NUM, 3}))
             throw smpl_error("SMPL", "Cannot launch a SMPL model!");
 
-        auto [poseRotation, restPoseRotation, poseBlendShape, shapeBlendShape] = blendShape(beta, theta);
+        torch::Tensor restTheta;
+        auto [poseRotation, restPoseRotation, poseBlendShape, shapeBlendShape] = blendShape(beta, theta, restTheta);
         auto [restShape, joints] = regressJoints(shapeBlendShape, poseBlendShape);
         auto transformation = transform(poseRotation, joints);
         m__result_vertices = skinning(restShape, transformation);

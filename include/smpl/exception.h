@@ -31,7 +31,7 @@ namespace smpl {
         Exception &operator=(const Exception &exception);
 
         // %% Exception propagation %%
-        const char *what() const final;
+        const char *what() const noexcept;
     };
 } // namespace SMPL
 #endif // EXCEPTION_H
