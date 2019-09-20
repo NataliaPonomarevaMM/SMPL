@@ -4,7 +4,6 @@
 #include <iostream>
 #include <gtest/gtest.h>
 #include "../../include/def.h"
-#include "../../include/smpl/TorchEx.h"
 #include "../../include/smpl/smpl.h"
 
 namespace smpl {
@@ -14,26 +13,15 @@ namespace smpl {
         nlohmann::json model;
         file >> model;
 
-        xt::xarray<int64_t> kinematicTree_;
-        xt::from_json(model["kinematic_tree"], kinematicTree_);
+        xt::xarray<int64_t> kinematicTree;
+        xt::from_json(model["kinematic_tree"], kinematicTree);
 
-        /**correct result
-         *
-         * - kinematicTree: [2, 24]
-         *      [
-         *          [4294967295, 0, 0, 0, 1, 2, 3, 4, 5, 6, 7, 8,
-         *          9, 9, 9, 12, 13, 14, 16, 17, 18, 19, 20, 21],
-         *          [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11,
-         *          12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23]
-         *      ]
-         */
-        torch::Tensor kinematicTree = torch::from_blob(kinematicTree_.data(), {2, JOINT_NUM}, torch::kInt64).to(m__device);
-
-        std::cout << "kinematic tree: "<< kinematicTree.sizes() << std::endl;
-        std::cout << kinematicTree << std::endl;
-
-        std::cout << "PASS!" << std::endl;
-        std::cout << "---------------------------------" << std::endl;
+        int64_t r_kinematicTree[2][24] = {
+                {4294967295, 0, 0, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 9, 9, 12, 13, 14, 16, 17, 18, 19, 20, 21},
+                {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23}};
+        for (int i = 0; i < 2; i++)
+            for (int j = 0; j < JOINT_NUM; j++)
+                ASSERT_EQ(r_kinematicTree[i][j], kinematicTree.at(i, j));
     }
 
     TEST_F(SMPL, BlendShape) {
@@ -42,9 +30,7 @@ namespace smpl {
         BATCH_SIZE = 1;
         VERTEX_NUM = 1;
 
-        m__device.set_index(0);
-
-        xt::xarray<float> theta_ {
+        xt::xarray<float> theta {
                 {
                         {0.79172504, 0.52889492, 0.56804456},
                         {0.92559664, 0.07103606, 0.0871293 },
@@ -72,15 +58,9 @@ namespace smpl {
                         {0.11872772, 0.31798318, 0.41426299}
                 }
         };// (1, 24, 3)
-        torch::Tensor theta = torch::from_blob(theta_.data(), {BATCH_SIZE, JOINT_NUM, 3}).to(m__device);
-        xt::xarray<float> beta_ {{
-                        0.5488135  , 0.71518937, 0.60276338, 0.54488318, 0.4236548 ,
-                        0.64589411 , 0.43758721, 0.891773  , 0.96366276, 0.38344152
-                }
-        };// (1, 10)
-        torch::Tensor beta = torch::from_blob(beta_.data(), {BATCH_SIZE, SHAPE_BASIS_DIM}).to(m__device);
-
-        xt::xarray<float> poseBlendBasis_ {
+        xt::xarray<float> beta {{0.5488135, 0.71518937, 0.60276338, 0.54488318, 0.4236548,
+                                  0.64589411, 0.43758721, 0.891773, 0.96366276, 0.38344152}};// (1, 10)
+        xt::xarray<float> poseBlendBasis {
                 {
                         {0.0641475 , 0.69247212, 0.56660145, 0.26538949, 0.52324805,
                                 0.09394051, 0.5759465 , 0.9292962 , 0.31856895, 0.66741038,
@@ -212,9 +192,9 @@ namespace smpl {
                                 0.22286382, 0.080532  }
                 }
         };// (1, 3, 207)
-        m__poseBlendBasis  = torch::from_blob(poseBlendBasis_.data(), {BATCH_SIZE, 3, POSE_BASIS_DIM}).to(m__device);
+        m__poseBlendBasis  = poseBlendBasis.data();
 
-        xt::xarray<float> shapeBlendBasis_ {
+        xt::xarray<float> shapeBlendBasis {
                 {
                         {0.08531092, 0.22139645, 0.10001406, 0.2650397 , 0.06614946,
                                 0.06560487, 0.85627618, 0.16212026, 0.55968241, 0.77345554},
@@ -226,92 +206,75 @@ namespace smpl {
                                 0.75928245, 0.36454463, 0.50106317, 0.37638916, 0.36491184}
                 }
         };// (1, 3, 10)
-        m__shapeBlendBasis = torch::from_blob(shapeBlendBasis_.data(),{BATCH_SIZE, 3, SHAPE_BASIS_DIM}).to(m__device);
+        m__shapeBlendBasis = shapeBlendBasis.data();
+        cudaMalloc((void **) &d_poseBlendBasis, VERTEX_NUM * 3 * POSE_BASIS_DIM * sizeof(float));
+        cudaMemcpy(d_poseBlendBasis, m__poseBlendBasis, VERTEX_NUM * 3 * POSE_BASIS_DIM * sizeof(float), cudaMemcpyHostToDevice);
+        cudaMalloc((void **) &d_shapeBlendBasis, VERTEX_NUM * 3 * SHAPE_BASIS_DIM * sizeof(float));
+        cudaMemcpy(d_shapeBlendBasis, m__shapeBlendBasis, VERTEX_NUM * 3 * SHAPE_BASIS_DIM * sizeof(float), cudaMemcpyHostToDevice);
 
-        /**correct result
-         *
-         * - shapeBlendShape: [1, 3]
-         *      [
-         *          [1.835449, 3.082224, 3.695877]
-         *      ]
-         *
-         * - poseBlendShape: [1, 3]
-         *      [
-         *          [
-         *              [0.912995, -1.879041, -3.56463]
-         *          ]
-         *      ]
-         *
-         * - poseRotation: [5, 3, 3]
-         *      [
-         *          [
-         *              [ 0.728415, -0.269833,  0.629764],
-         *              [ 0.647397,  0.571931, -0.503758],
-         *              [-0.224251,  0.774652,  0.591292]
-         *          ],
-         *          [
-         *              [ 0.994126, -0.044481,  0.098667],
-         *              [ 0.105604,  0.598255, -0.794316],
-         *              [-0.023696,  0.80007 ,  0.599438],
-         *          ],
-         *          [
-         *              [ 0.41794 , -0.612729,  0.670738],
-         *              [ 0.627818,  0.728445,  0.274249],
-         *              [-0.656636,  0.306481,  0.689129]
-         *          ],
-         *          [
-         *              [ 0.346577, -0.172097,  0.922099],
-         *              [ 0.869102,  0.428758, -0.246636],
-         *              [-0.352912,  0.886876,  0.298167]
-         *          ],
-         *          [
-         *              [ 0.70951 ,  0.065427,  0.701652],
-         *              [ 0.270361,  0.894214, -0.356772],
-         *              [-0.650769,  0.442832,  0.616765]
-         *          ]
-         *      ]
-         *
-         * - restPoseRotation: [1, 3, 3]
-         *      [
-         *          [1., 0., 0.],
-         *          [0., 1., 0.],
-         *          [0., 0., 1.]
-         *      ]
-         */
+        auto [d_poseRotation, d_restPoseRotation, d_poseBlendShape, d_shapeBlendShape] = blendShape(beta.data(), theta.data());
+        float *poseRotation = malloc(BATCH_SIZE * JOINT_NUM * 9),
+            *restPoseRotation = malloc(BATCH_SIZE * JOINT_NUM * 9),
+            *poseBlendShape = malloc(BATCH_SIZE * VERTEX_NUM * 3),
+            *shapeBlendShape = malloc(BATCH_SIZE * VERTEX_NUM * 3);
+        cudaMemcpy(poseRotation, d_poseRotation, BATCH_SIZE * JOINT_NUM * 9 * sizeof(float), cudaMemcpyDeviceToHost);
+        cudaMemcpy(restPoseRotation, d_restPoseRotation, BATCH_SIZE * JOINT_NUM * 9 * sizeof(float), cudaMemcpyDeviceToHost);
+        cudaMemcpy(poseBlendShape, d_poseBlendShape, BATCH_SIZE * VERTEX_NUM * 3 * sizeof(float), cudaMemcpyDeviceToHost);
+        cudaMemcpy(shapeBlendShape, d_shapeBlendShape, BATCH_SIZE * VERTEX_NUM * 3 * sizeof(float), cudaMemcpyDeviceToHost);
+        
+        cudaFree(d_poseRotation);
+        cudaFree(d_restPoseRotation);
+        cudaFree(d_poseBlendShape);
+        cudaFree(d_shapeBlendShape);
 
-        torch::Tensor restTheta;
-        auto [poseRotation, restPoseRotation, poseBlendShape, shapeBlendShape] = blendShape(beta, theta, restTheta);
+        float r_shapeBlendShape[3] = {1.835449, 3.082224, 3.695877};
+        float r_poseBlendShape[3] = {0.912995, -1.879041, -3.56463};
+        float r_poseRotation[5][3][3] = {
+                {
+                        {0.728415, -0.269833, 0.629764},
+                        {0.647397, 0.571931, -0.503758},
+                        {-0.224251, 0.774652, 0.591292}
+                },
+                {
+                        {0.994126, -0.044481, 0.098667},
+                        {0.105604, 0.598255, -0.794316},
+                        {-0.023696, 0.80007,  0.599438},
+                },
+                {
+                        {0.41794,  -0.612729, 0.670738},
+                        {0.627818, 0.728445, 0.274249},
+                        {-0.656636, 0.306481, 0.689129}
+                },
+                {
+                        {0.346577, -0.172097, 0.922099},
+                        {0.869102, 0.428758, -0.246636},
+                        {-0.352912, 0.886876, 0.298167}
+                },
+                {
+                        {0.70951,  0.065427,  0.701652},
+                        {0.270361, 0.894214, -0.356772},
+                        {-0.650769, 0.442832, 0.616765}
+                }
+        };
+        float r_restPoseRotation[3][3] = {{1., 0., 0.}, {0., 1., 0.}, {0., 0., 1.}};
 
-        std::cout << "shape blend shape: "
-                  << shapeBlendShape.sizes() << std::endl;// (1, 1, 3)
-        std::cout << shapeBlendShape << std::endl;
-        std::cout << std::endl;
+        for (int i = 0; i < 3; i++)
+            ASSERT_EQ(r_shapeBlendShape[i], shapeBlendShape[i]);
+        for (int i = 0; i < 3; i++)
+            ASSERT_EQ(r_poseBlendShape[i], poseBlendShape[i]);
 
-        std::cout << "pose blend shape: "
-                  << poseBlendShape.sizes() << std::endl;// (1, 3, 3)
-        std::cout << poseBlendShape << std::endl;
-        std::cout << std::endl;
+        for (int i = 0; i < 5; i++)
+            for (int j = 0; j < 3; j++)
+                for (int k = 0; k < 3; k++)
+                    ASSERT_EQ(r_poseRotation[i][j][k], poseRotation[i * 9 + j * 3 + k]);
+        for (int j = 0; j < 3; j++)
+            for (int k = 0; k < 3; k++)
+                ASSERT_EQ(r_restPoseRotation[j][k], restPoseRotation[j * 3 + k]);
 
-        torch::Tensor poseRotSlice = TorchEx::indexing(poseRotation, torch::IntList({0}), torch::IntList({0, 5}),
-                                                       torch::IntList(),torch::IntList());
-        std::cout << "first five pose rotation: "
-                  << poseRotSlice.sizes() << std::endl;// (5, 3, 3)
-        std::cout << poseRotSlice << std::endl;// the first five rotation
-        std::cout << std::endl;
-
-        torch::Tensor restRotSlice = TorchEx::indexing(restPoseRotation,
-                                                       torch::IntList(),
-                                                       torch::IntList({0}),
-                                                       torch::IntList(),
-                                                       torch::IntList()
-        );
-        std::cout << "first rest pose rotation: "
-                  << restRotSlice.sizes() << std::endl;// (1, 3, 3)
-        std::cout << restRotSlice << std::endl;// the first rotation
-        std::cout << std::endl;
-
-        std::cout << "PASS!" << std::endl;
-        std::cout << "---------------------------------------" << std::endl;
+        free(shapeBlendShape);
+        free(poseBlendShape);
+        free(poseRotation);
+        free(restPoseRotation);
 
         BATCH_SIZE = batchSize;
         VERTEX_NUM = vertexNum;
@@ -323,8 +286,6 @@ namespace smpl {
         BATCH_SIZE = 1;
         VERTEX_NUM = 5;
 
-        std::cout << "---------- <JointRegression> Test ----------" << std::endl;
-
         xt::xarray<float> templateShape_ {
                 {0.5488135 , 0.71518937, 0.60276338},
                 {0.54488318, 0.4236548 , 0.64589411},
@@ -332,7 +293,7 @@ namespace smpl {
                 {0.38344152, 0.79172504, 0.52889492},
                 {0.56804456, 0.92559664, 0.07103606}
         };// (5, 3)
-        m__templateRestShape = torch::from_blob(templateShape_.data(),{VERTEX_NUM, 3}).to(m__device);
+        m__templateRestShape = templateShape_.data();
 
         xt::xarray<float> jointRegressor_ {
                 {0.0871293 , 0.0202184 , 0.83261985, 0.77815675, 0.87001215},
@@ -360,9 +321,14 @@ namespace smpl {
                 {0.60639321, 0.0191932 , 0.30157482, 0.66017354, 0.29007761},
                 {0.61801543, 0.4287687 , 0.13547406, 0.29828233, 0.56996491}
         };// (24, 5)
-        m__jointRegressor = torch::from_blob(jointRegressor_.data(),{JOINT_NUM, VERTEX_NUM}).to(m__device);
+        m__jointRegressor = jointRegressor_.data();
 
-        xt::xarray<float> shapeBlendShape_ {
+        cudaMalloc((void **) &d_templateRestShape, VERTEX_NUM * 3 * sizeof(float));
+        cudaMalloc((void **) &d_jointRegressor, JOINT_NUM * VERTEX_NUM * sizeof(float));
+        cudaMemcpy(d_templateRestShape, m__templateRestShape, VERTEX_NUM * 3  * sizeof(float), cudaMemcpyHostToDevice);
+        cudaMemcpy(d_jointRegressor, m__jointRegressor, JOINT_NUM * VERTEX_NUM * sizeof(float), cudaMemcpyHostToDevice);
+
+        xt::xarray<float> shapeBlendShape {
                 {
                         {0.1494483 , 0.86812606, 0.16249293},
                         {0.61555956, 0.12381998, 0.84800823},
@@ -371,9 +337,7 @@ namespace smpl {
                         {0.7220556 , 0.86638233, 0.97552151}
                 }
         };// (1, 5, 3)
-        torch::Tensor shapeBlendShape = torch::from_blob(shapeBlendShape_.data(),{BATCH_SIZE, VERTEX_NUM, 3}).to(m__device);
-
-        xt::xarray<float> poseBlendShape_ {
+        xt::xarray<float> poseBlendShape {
                 {
                         {0.59087276, 0.57432525, 0.65320082},
                         {0.65210327, 0.43141844, 0.8965466 },
@@ -382,65 +346,68 @@ namespace smpl {
                         {0.91948261, 0.7142413 , 0.99884701}
                 }
         };// (1, 5, 3)
-        torch::Tensor poseBlendShape = torch::from_blob(poseBlendShape_.data(),{BATCH_SIZE, VERTEX_NUM, 3}).to(m__device);
+        float *d_shapeBlendShape, *d_poseBlendShape;
+        cudaMalloc((void **) &d_shapeBlendShape, BATCH_SIZE * VERTEX_NUM * 3 * sizeof(float));
+        cudaMalloc((void **) &d_poseBlendShape, BATCH_SIZE * VERTEX_NUM * 3 * sizeof(float));
+        cudaMemcpy(d_shapeBlendShape, shapeBlendShape.data(), BATCH_SIZE * VERTEX_NUM * 3 * sizeof(float), cudaMemcpyHostToDevice);
+        cudaMemcpy(d_poseBlendShape, poseBlendShape.data(), BATCH_SIZE * VERTEX_NUM * 3 * sizeof(float), cudaMemcpyHostToDevice);
 
-        /**correct results
-         *
-         * - restShape: (1, 5, 3)
-         *      [
-         *          [
-         *              [1.289135, 2.157641, 1.418457],
-         *              [1.812546, 0.978893, 2.390449],
-         *              [1.612468, 1.896739, 2.262769],
-         *              [1.258803, 2.193042, 1.082664],
-         *              [2.209583, 2.50622 , 2.045405]
-         *          ]
-         *      ]
-         *
-         * - joints: (1, 24, 3)
-         *      [
-         *          [2.595438, 4.083213, 2.913282],
-         *          [2.691068, 4.035417, 3.465978],
-         *          [2.560358, 3.991899, 2.945506],
-         *          [1.932566, 2.389283, 2.56251 ],
-         *          [3.216363, 4.841475, 3.87352 ],
-         *          [2.514121, 3.112146, 2.641321],
-         *          [1.484908, 2.486839, 1.694772],
-         *          [2.45321 , 3.113077, 2.765337],
-         *          [1.712245, 2.115405, 2.160274],
-         *          [1.372309, 1.828988, 1.52776 ],
-         *          [1.834302, 2.595169, 2.565565],
-         *          [3.669125, 5.454995, 4.154255],
-         *          [0.792384, 1.046224, 1.03244 ],
-         *          [1.827013, 2.870513, 2.223435],
-         *          [2.369021, 3.366848, 2.651944],
-         *          [1.858591, 2.647657, 2.428134],
-         *          [1.214805, 1.883359, 1.863242],
-         *          [2.458281, 4.173653, 3.135531],
-         *          [3.13185 , 4.111864, 3.326101],
-         *          [3.349709, 4.094417, 3.709395],
-         *          [3.315481, 4.513383, 4.00757 ],
-         *          [3.116701, 4.538026, 3.690847],
-         *          [1.494156, 2.914095, 1.858294],
-         *          [1.968068, 2.876717, 2.188738]
-         *      ]
-         *
-         */
+        auto [d_restShape, d_joints] = regressJoints(d_shapeBlendShape, d_poseBlendShape);
+        float *joints = malloc(BATCH_SIZE * JOINT_NUM * 3 * sizeof(float),
+                *restShape = malloc(BATCH_SIZE * VERTEX_NUM * 3 * sizeof(float));
+        cudaMemcpy(joints, d_joints, BATCH_SIZE * JOINT_NUM * 3 * sizeof(float), cudaMemcpyDeviceToHost);
+        cudaMemcpy(restShape, d_restShape, BATCH_SIZE * VERTEX_NUM * 3 * sizeof(float), cudaMemcpyDeviceToHost);
+        
+        cudaFree(d_shapeBlendShape);
+        cudaFree(d_poseBlendShape);
+        cudaFree(d_joints);
+        cudaFree(d_restShape);
+        float r_restShape[5][3] =
+                {
+                    {
+                        {1.289135, 2.157641, 1.418457},
+                        {1.812546, 0.978893, 2.390449},
+                        {1.612468, 1.896739, 2.262769},
+                        {1.258803, 2.193042, 1.082664},
+                        {2.209583, 2.50622 , 2.045405}
+                    }
+                };
+        float r_joints[24][3] =
+                {
+                   {2.595438, 4.083213, 2.913282},
+                   {2.691068, 4.035417, 3.465978},
+                   {2.560358, 3.991899, 2.945506},
+                   {1.932566, 2.389283, 2.56251 },
+                   {3.216363, 4.841475, 3.87352 },
+                   {2.514121, 3.112146, 2.641321},
+                   {1.484908, 2.486839, 1.694772},
+                   {2.45321 , 3.113077, 2.765337},
+                   {1.712245, 2.115405, 2.160274},
+                   {1.372309, 1.828988, 1.52776 },
+                   {1.834302, 2.595169, 2.565565},
+                   {3.669125, 5.454995, 4.154255},
+                   {0.792384, 1.046224, 1.03244 },
+                   {1.827013, 2.870513, 2.223435},
+                   {2.369021, 3.366848, 2.651944},
+                   {1.858591, 2.647657, 2.428134},
+                   {1.214805, 1.883359, 1.863242},
+                   {2.458281, 4.173653, 3.135531},
+                   {3.13185 , 4.111864, 3.326101},
+                   {3.349709, 4.094417, 3.709395},
+                   {3.315481, 4.513383, 4.00757 },
+                   {3.116701, 4.538026, 3.690847},
+                   {1.494156, 2.914095, 1.858294},
+                   {1.968068, 2.876717, 2.188738}
+                };
+        for (int j = 0; j < VERTEX_NUM; j++)
+            for (int k = 0; k < 3; k++)
+                ASSERT_EQ(r_restShape[j][k], restShape[j * 3 + k]);
+        for (int j = 0; j < JOINT_NUM; j++)
+            for (int k = 0; k < 3; k++)
+                ASSERT_EQ(r_joints[j][k], joints[j * 3 + k]);
 
-        auto [restShape, joints] = regressJoints(shapeBlendShape, poseBlendShape);
-
-        std::cout << "deformed shape in rest pose: ";
-        std::cout << restShape.sizes() << std::endl;// (1, 5, 3)
-        std::cout << restShape << std::endl;
-        std::cout << std::endl;
-
-        std::cout << "joints of deformed shape: ";
-        std::cout << joints.sizes() << std::endl;// (1, 24, 3)
-        std::cout << joints << std::endl;
-        std::cout << std::endl;
-
-        std::cout << "PASS!" << std::endl;
-        std::cout << "--------------------------------------------" << std::endl;
+        free(joints);
+        free(restShape);
 
         BATCH_SIZE = batchSize;
         VERTEX_NUM = vertexNum;
@@ -449,18 +416,16 @@ namespace smpl {
     TEST_F(SMPL, WorldTransformation) {
         int batchSize = BATCH_SIZE;
         BATCH_SIZE = 1;
-
-        std::cout << "---------- <WorldTransformation> Test ----------" << std::endl;
-
+        
         xt::xarray<int64_t> kineTree_ {
                 {4294967295, 0, 0, 0, 1, 2, 3, 4, 5, 6, 7, 8,
                         9, 9, 9, 12, 13, 14, 16, 17, 18, 19, 20, 21},
                 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11,
                         12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23}
         };// (2, 24)
-        m__kinematicTree = torch::from_blob(kineTree_.data(),{2, JOINT_NUM}, torch::kInt64).to(m__device);
+        m__kinematicTree = kineTree_.data();
 
-        xt::xarray<float> joints_ {
+        xt::xarray<float> joints {
                 {
                         {0.5488135 , 0.71518937, 0.60276338},
                         {0.54488318, 0.4236548 , 0.64589411},
@@ -488,9 +453,7 @@ namespace smpl {
                         {0.09609841, 0.97645947, 0.4686512 }
                 }
         };// (1, 24, 3)
-        torch::Tensor joints = torch::from_blob(joints_.data(),{BATCH_SIZE, JOINT_NUM, 3}).to(m__device);
-
-        xt::xarray<float> poseRotation_ {
+        xt::xarray<float> poseRotation {
                 {
                         {
                                 {0.95627849, 0.89187929, 0.90854612},
@@ -614,55 +577,63 @@ namespace smpl {
                         }
                 }
         };// (1, 24, 3, 3)
-        torch::Tensor poseRotation = torch::from_blob(poseRotation_.data(),{BATCH_SIZE, JOINT_NUM, 3, 3});
+        cudaMalloc((void **) &d_kinematicTree, 2 * JOINT_NUM * sizeof(int64_t));
+        cudaMemcpy(d_kinematicTree, m__kinematicTree, 2 * JOINT_NUM * sizeof(int), cudaMemcpyHostToDevice);
 
-        /**correct results
-         *
-         * - transformations: (1, 5, 4, 4)
-         *      [
-         *          [
-         *              [ 0.956278,  0.891879,  0.908546, -1.161506],
-         *              [ 0.038366,  0.417015,  0.14772 ,  0.306849],
-         *              [ 0.28993 ,  0.175071,  0.390798,  0.082879],
-         *              [ 0.      ,  0.      ,  0.      ,  1.      ]
-         *          ],
-         *          [
-         *              [ 1.393548,  1.288563,  1.551762, -1.983273],
-         *              [ 0.3757  ,  0.310975,  0.300451,  0.069317],
-         *              [ 0.361526,  0.455201,  0.515535, -0.155379],
-         *              [ 0.      ,  0.      ,  0.      ,  1.      ]
-         *          ],
-         *          [
-         *              [ 1.50793 ,  1.256797,  1.213523, -2.02222 ],
-         *              [ 0.406074,  0.205106,  0.23734 ,  0.248555],
-         *              [ 0.456527,  0.346317,  0.458883, -0.208346],
-         *              [ 0.      ,  0.      ,  0.      ,  1.      ]
-         *          ],
-         *          [
-         *              [ 1.267205,  1.551624,  1.470787, -2.100431],
-         *              [ 0.419537,  0.390676,  0.292143,  0.10516 ],
-         *              [ 0.380306,  0.452636,  0.50812 , -0.233582],
-         *              [ 0.      ,  0.      ,  0.      ,  1.      ]
-         *          ],
-         *          [
-         *              [ 2.229255,  2.2815  ,  2.300334, -3.430226],
-         *              [ 0.494933,  0.557158,  0.508993, -0.241092],
-         *              [ 0.740878,  0.695654,  0.728085, -0.608528],
-         *              [ 0.      ,  0.      ,  0.      ,  1.      ]
-         *          ]
-         *      ]
-         *
-         *
-         */
+        float *d_joints, *d_poseRotation;
+        cudaMalloc((void **) &d_joints, BATCH_SIZE * JOINT_NUM * 3 * sizeof(float));
+        cudaMalloc((void **) &d_poseRotation, BATCH_SIZE * JOINT_NUM * 9 * sizeof(float));
+        cudaMemcpy(d_joints, joints.data(), BATCH_SIZE * JOINT_NUM * 3 * sizeof(float), cudaMemcpyHostToDevice);
+        cudaMemcpy(d_poseRotation, poseRotation.data(), BATCH_SIZE * JOINT_NUM * 9 * sizeof(float), cudaMemcpyHostToDevice);
 
-        torch::Tensor transformations = transform(poseRotation, joints);
-        torch::Tensor slice = TorchEx::indexing(transformations,torch::IntList(), torch::IntList({0, 5}), torch::IntList());
-        std::cout << "first five pose rotation: "<< slice.sizes() << std::endl;// (1, 5, 4, 4)
-        std::cout << slice << std::endl;
+        auto d_transformation = transform(d_poseRotation, d_joints);
+        float *transformation = malloc(BATCH_SIZE * JOINT_NUM * 16 * sizeof(float);
+        cudaMemcpy(transformation, d_transformation, BATCH_SIZE * JOINT_NUM * 16 * sizeof(float), cudaMemcpyDeviceToHost);
 
-        std::cout << "PASS!" << std::endl;
-        std::cout << "------------------------------------------------" << std::endl;
+        cudaFree(d_joints);
+        cudaFree(d_poseRotation);
+        cudaFree(d_transformation);
 
+        float r_transformations[5][4][4] =
+                {
+                        {
+                        {0.956278,  0.891879,  0.908546, -1.161506},
+                        { 0.038366,  0.417015,  0.14772 ,  0.306849},
+                        { 0.28993 ,  0.175071,  0.390798,  0.082879},
+                        { 0.      ,  0.      ,  0.      ,  1.      }
+                    },
+                    {
+                        { 1.393548,  1.288563,  1.551762, -1.983273},
+                        { 0.3757  ,  0.310975,  0.300451,  0.069317},
+                        { 0.361526,  0.455201,  0.515535, -0.155379},
+                        { 0.      ,  0.      ,  0.      ,  1.      }
+                    },
+                    {
+                        { 1.50793 ,  1.256797,  1.213523, -2.02222 },
+                        { 0.406074,  0.205106,  0.23734 ,  0.248555},
+                        { 0.456527,  0.346317,  0.458883, -0.208346},
+                        { 0.      ,  0.      ,  0.      ,  1.      }
+                    },
+                    {
+                        { 1.267205,  1.551624,  1.470787, -2.100431},
+                        { 0.419537,  0.390676,  0.292143,  0.10516 },
+                        { 0.380306,  0.452636,  0.50812 , -0.233582},
+                        { 0.      ,  0.      ,  0.      ,  1.      }
+                    },
+                    {
+                        { 2.229255,  2.2815  ,  2.300334, -3.430226},
+                        { 0.494933,  0.557158,  0.508993, -0.241092},
+                        { 0.740878,  0.695654,  0.728085, -0.608528},
+                        { 0.      ,  0.      ,  0.      ,  1.      }
+                    }
+                };
+
+        for (int i = 0; i < 5; i++)
+            for (int j = 0; j < 4; j++)
+                for (int k = 0; k < 4; k++)
+                    ASSERT_EQ(r_transformations[i][j][k], transformation[i * 16 + j * 4 + k]);
+
+        free(transformation);
         BATCH_SIZE = batchSize;
     }
 
@@ -671,9 +642,6 @@ namespace smpl {
         int vertexNum = VERTEX_NUM;
         BATCH_SIZE = 1;
         VERTEX_NUM = 1;
-
-
-        std::cout << "---------- <LinearBlendSkinning> Test ----------" << std::endl;
 
         xt::xarray<float> weights_ {
                 {
@@ -685,16 +653,17 @@ namespace smpl {
                         0.97861834, 0.79915856, 0.46147936, 0.78052918
                 }
         };// (1, 24)
-        m__weights = torch::from_blob(weights_.data(),{BATCH_SIZE, JOINT_NUM}).to(m__device);
+        m__weights = weights_.data();
+        cudaMalloc((void **) &d_weights, VERTEX_NUM * JOINT_NUM * sizeof(float));
+        cudaMemcpy(d_weights, m__weights, VERTEX_NUM * JOINT_NUM * sizeof(float), cudaMemcpyHostToDevice);
 
         xt::xarray<float> restShape_ {
                 {
                         {0.11827443, 0.63992102, 0.14335329}
                 }
         };// (1, 1, 3)
-        torch::Tensor restShape = torch::from_blob(restShape_.data(),{BATCH_SIZE, VERTEX_NUM, 3}).to(m__device);
 
-        xt::xarray<float> transformations_ {
+        xt::xarray<float> transformations {
                 {
                         {
                                 {0.94466892, 0.52184832, 0.41466194, 0.26455561},
@@ -843,26 +812,21 @@ namespace smpl {
                         }
                 }
         };// (1, 24, 4, 4)
-        torch::Tensor transformations = torch::from_blob(transformations_.data(),{BATCH_SIZE, JOINT_NUM, 4, 4}).to(m__device);
 
-        /**correct results
-         *
-         * - vertices: (1, 1, 1)
-         *      [
-         *          [
-         *              [1.077754, 1.091551, 1.083642]
-         *          ]
-         *      ]
-         *
-         */
+        float *d_restShape, *d_transformations;
+        cudaMalloc((void **) &d_transformations, BATCH_SIZE * JOINT_NUM * 16 * sizeof(float));
+        cudaMalloc((void **) &d_restShape, BATCH_SIZE * VERTEX_NUM * 3 * sizeof(float));
+        cudaMemcpy(d_transformations, transformations, BATCH_SIZE * JOINT_NUM * 16 * sizeof(float), cudaMemcpyHostToDevice);
+        cudaMemcpy(d_restShape, restShape, BATCH_SIZE * VERTEX_NUM * 3 * sizeof(float), cudaMemcpyHostToDevice);
 
-        torch::Tensor vertices = skinning(restShape, transformations);
+        skinning(d_restShape, d_transformations);
+        cudaFree(d_restShape);
+        cudaFree(d_transformations);
 
-        std::cout << "posed vertices: "<< vertices.sizes() << std::endl;// (N, 6890, 3)
-        std::cout << vertices << std::endl;
+        float r_vertices[3] = {1.077754, 1.091551, 1.083642};
 
-        std::cout << "PASS!" << std::endl;
-        std::cout << "------------------------------------------------" << std::endl;
+        for (int i = 0; i < 3; i++)
+            ASSERT_EQ(r_vertices[i], m__result_vertices[i]);
 
         BATCH_SIZE = batchSize;
         VERTEX_NUM = vertexNum;

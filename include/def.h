@@ -25,7 +25,7 @@
 #define FACE_INDEX_NUM smpl::face_index_num
 #endif // FACE_INDEX_NUM
 
-#include <cstdint>
+#include <cstdlib>
 
 namespace smpl {
     extern int64_t batch_size;// 256
