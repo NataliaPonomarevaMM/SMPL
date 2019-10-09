@@ -1,6 +1,4 @@
 #include <xtensor/xarray.hpp>
-#include <xtensor/xjson.hpp>
-#include <iostream>
 #include <gtest/gtest.h>
 #include "../../include/def.h"
 #include "../../include/smpl/smpl.h"
