@@ -89,7 +89,7 @@ namespace smpl {
                             shapeBlendShape[i * VERTEX_NUM * 3 + j * 3 + l]) * jointRegressor[k * VERTEX_NUM + j];
         }
 
-        __global__ void LocalTransform(float *joints, float *kinematicTree, float *poseRotation, int JOINT_NUM,
+        __global__ void LocalTransform(float *joints, int *kinematicTree, float *poseRotation, int JOINT_NUM,
                                        float *localTransformations) {
             // joints [BATCH_SIZE][JOINT_NUM][3]
             // poseRotHomo [BATCH_SIZE][JOINTS_NUM][4][3]
@@ -113,7 +113,7 @@ namespace smpl {
         }
 
 
-        __global__ void GlobalTransform(float *localTransformations, float *kinematicTree, int JOINT_NUM, int BATCH_SIZE,
+        __global__ void GlobalTransform(float *localTransformations, int *kinematicTree, int JOINT_NUM, int BATCH_SIZE,
                                         float *globalTransformations) {
             //global transformations [N][24][4][4]
             for (int i = 0; i < BATCH_SIZE; i++)
