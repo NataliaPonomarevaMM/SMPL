@@ -212,7 +212,13 @@ namespace smpl {
         cudaMalloc((void **) &d_shapeBlendBasis, VERTEX_NUM * 3 * SHAPE_BASIS_DIM * sizeof(float));
         cudaMemcpy(d_shapeBlendBasis, m__shapeBlendBasis, VERTEX_NUM * 3 * SHAPE_BASIS_DIM * sizeof(float), cudaMemcpyHostToDevice);
 
-        auto [d_poseRotation, d_restPoseRotation, d_poseBlendShape, d_shapeBlendShape] = blendShape(beta.data(), theta.data());
+        //auto [d_poseRotation, d_restPoseRotation, d_poseBlendShape, d_shapeBlendShape] = blendShape(beta.data(), theta.data());
+        auto bs = blendShape(beta, theta);
+        auto d_poseRotation = std::get<0>(bs);
+        auto d_restPoseRotation = std::get<1>(bs);
+        auto d_poseBlendShape = std::get<2>(bs);
+        auto d_shapeBlendShape = std::get<3>(bs);
+
         float *poseRotation = malloc(BATCH_SIZE * JOINT_NUM * 9),
             *restPoseRotation = malloc(BATCH_SIZE * JOINT_NUM * 9),
             *poseBlendShape = malloc(BATCH_SIZE * VERTEX_NUM * 3),
@@ -352,7 +358,11 @@ namespace smpl {
         cudaMemcpy(d_shapeBlendShape, shapeBlendShape.data(), BATCH_SIZE * VERTEX_NUM * 3 * sizeof(float), cudaMemcpyHostToDevice);
         cudaMemcpy(d_poseBlendShape, poseBlendShape.data(), BATCH_SIZE * VERTEX_NUM * 3 * sizeof(float), cudaMemcpyHostToDevice);
 
-        auto [d_restShape, d_joints] = regressJoints(d_shapeBlendShape, d_poseBlendShape);
+        //auto [d_restShape, d_joints] = regressJoints(d_shapeBlendShape, d_poseBlendShape);
+        auto rj = regressJoints(d_shapeBlendShape, d_poseBlendShape);
+        auto d_restShape = std::get<0>(rj);
+        auto d_joints = std::get<1>(rj);
+
         float *joints = malloc(BATCH_SIZE * JOINT_NUM * 3 * sizeof(float),
                 *restShape = malloc(BATCH_SIZE * VERTEX_NUM * 3 * sizeof(float));
         cudaMemcpy(joints, d_joints, BATCH_SIZE * JOINT_NUM * 3 * sizeof(float), cudaMemcpyDeviceToHost);
