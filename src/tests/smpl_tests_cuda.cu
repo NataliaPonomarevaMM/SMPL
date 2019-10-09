@@ -213,16 +213,16 @@ namespace smpl {
         cudaMemcpy(d_shapeBlendBasis, m__shapeBlendBasis, VERTEX_NUM * 3 * SHAPE_BASIS_DIM * sizeof(float), cudaMemcpyHostToDevice);
 
         //auto [d_poseRotation, d_restPoseRotation, d_poseBlendShape, d_shapeBlendShape] = blendShape(beta.data(), theta.data());
-        auto bs = blendShape(beta, theta);
+        auto bs = blendShape(beta.data(), theta.data());
         auto d_poseRotation = std::get<0>(bs);
         auto d_restPoseRotation = std::get<1>(bs);
         auto d_poseBlendShape = std::get<2>(bs);
         auto d_shapeBlendShape = std::get<3>(bs);
 
-        float *poseRotation = malloc(BATCH_SIZE * JOINT_NUM * 9),
-            *restPoseRotation = malloc(BATCH_SIZE * JOINT_NUM * 9),
-            *poseBlendShape = malloc(BATCH_SIZE * VERTEX_NUM * 3),
-            *shapeBlendShape = malloc(BATCH_SIZE * VERTEX_NUM * 3);
+        float *poseRotation = (float *)malloc(BATCH_SIZE * JOINT_NUM * 9),
+            *restPoseRotation = (float *)malloc(BATCH_SIZE * JOINT_NUM * 9),
+            *poseBlendShape = (float *)malloc(BATCH_SIZE * VERTEX_NUM * 3),
+            *shapeBlendShape = (float *)malloc(BATCH_SIZE * VERTEX_NUM * 3);
         cudaMemcpy(poseRotation, d_poseRotation, BATCH_SIZE * JOINT_NUM * 9 * sizeof(float), cudaMemcpyDeviceToHost);
         cudaMemcpy(restPoseRotation, d_restPoseRotation, BATCH_SIZE * JOINT_NUM * 9 * sizeof(float), cudaMemcpyDeviceToHost);
         cudaMemcpy(poseBlendShape, d_poseBlendShape, BATCH_SIZE * VERTEX_NUM * 3 * sizeof(float), cudaMemcpyDeviceToHost);
@@ -363,8 +363,8 @@ namespace smpl {
         auto d_restShape = std::get<0>(rj);
         auto d_joints = std::get<1>(rj);
 
-        float *joints = malloc(BATCH_SIZE * JOINT_NUM * 3 * sizeof(float),
-                *restShape = malloc(BATCH_SIZE * VERTEX_NUM * 3 * sizeof(float));
+        float *joints = (float *)malloc(BATCH_SIZE * JOINT_NUM * 3 * sizeof(float)),
+                *restShape = (float *)malloc(BATCH_SIZE * VERTEX_NUM * 3 * sizeof(float));
         cudaMemcpy(joints, d_joints, BATCH_SIZE * JOINT_NUM * 3 * sizeof(float), cudaMemcpyDeviceToHost);
         cudaMemcpy(restShape, d_restShape, BATCH_SIZE * VERTEX_NUM * 3 * sizeof(float), cudaMemcpyDeviceToHost);
         
@@ -597,7 +597,7 @@ namespace smpl {
         cudaMemcpy(d_poseRotation, poseRotation.data(), BATCH_SIZE * JOINT_NUM * 9 * sizeof(float), cudaMemcpyHostToDevice);
 
         auto d_transformation = transform(d_poseRotation, d_joints);
-        float *transformation = malloc(BATCH_SIZE * JOINT_NUM * 16 * sizeof(float);
+        float *transformation = (float *)malloc(BATCH_SIZE * JOINT_NUM * 16 * sizeof(float));
         cudaMemcpy(transformation, d_transformation, BATCH_SIZE * JOINT_NUM * 16 * sizeof(float), cudaMemcpyDeviceToHost);
 
         cudaFree(d_joints);
@@ -667,7 +667,7 @@ namespace smpl {
         cudaMalloc((void **) &d_weights, VERTEX_NUM * JOINT_NUM * sizeof(float));
         cudaMemcpy(d_weights, m__weights, VERTEX_NUM * JOINT_NUM * sizeof(float), cudaMemcpyHostToDevice);
 
-        xt::xarray<float> restShape_ {
+        xt::xarray<float> restShape {
                 {
                         {0.11827443, 0.63992102, 0.14335329}
                 }
@@ -826,8 +826,8 @@ namespace smpl {
         float *d_restShape, *d_transformations;
         cudaMalloc((void **) &d_transformations, BATCH_SIZE * JOINT_NUM * 16 * sizeof(float));
         cudaMalloc((void **) &d_restShape, BATCH_SIZE * VERTEX_NUM * 3 * sizeof(float));
-        cudaMemcpy(d_transformations, transformations, BATCH_SIZE * JOINT_NUM * 16 * sizeof(float), cudaMemcpyHostToDevice);
-        cudaMemcpy(d_restShape, restShape, BATCH_SIZE * VERTEX_NUM * 3 * sizeof(float), cudaMemcpyHostToDevice);
+        cudaMemcpy(d_transformations, transformations.data(), BATCH_SIZE * JOINT_NUM * 16 * sizeof(float), cudaMemcpyHostToDevice);
+        cudaMemcpy(d_restShape, restShape.data(), BATCH_SIZE * VERTEX_NUM * 3 * sizeof(float), cudaMemcpyHostToDevice);
 
         skinning(d_restShape, d_transformations);
         cudaFree(d_restShape);
