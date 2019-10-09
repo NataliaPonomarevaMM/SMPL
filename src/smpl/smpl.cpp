@@ -1,5 +1,6 @@
 #include <fstream>
 // #include <experimental/filesystem>
+#include <nlohmann/json.hpp>
 #include <xtensor/xarray.hpp>
 #include <xtensor/xjson.hpp>
 #include "../../include/smpl/exception.h"
@@ -10,7 +11,6 @@ namespace smpl {
     SMPL::SMPL() :
             m__modelPath(nullptr),
             m__vertPath(nullptr),
-            m__model(),
             m__faceIndices(nullptr),
             m__shapeBlendBasis(nullptr),
             m__poseBlendBasis(nullptr),
@@ -28,7 +28,7 @@ namespace smpl {
     {
     }
 
-    SMPL::SMPL(std::string &modelPath, std::string &vertPath) : m__model() {
+    SMPL::SMPL(std::string &modelPath, std::string &vertPath) {
 //        std::experimental::filesystem::path path(modelPath);
 //        if (std::experimental::filesystem::exists(path)) {
 //            m__modelPath = modelPath;
@@ -55,38 +55,39 @@ namespace smpl {
 //        if (!std::experimental::filesystem::exists(path))
 //            throw smpl_error("SMPL", "Cannot initialize a SMPL model!");
 
+        nlohmann::json model; // JSON object represents.
         std::ifstream file(m__modelPath);
-        file >> m__model;
+        file >> model;
 
         // face indices
         xt::xarray<int32_t> faceIndices;
-        xt::from_json(m__model["face_indices"], faceIndices);
+        xt::from_json(model["face_indices"], faceIndices);
         m__faceIndices = faceIndices.data();
 
         // blender
         xt::xarray<float> shapeBlendBasis;
         xt::xarray<float> poseBlendBasis;
-        xt::from_json(m__model["shape_blend_shapes"], shapeBlendBasis);
-        xt::from_json(m__model["pose_blend_shapes"], poseBlendBasis);
+        xt::from_json(model["shape_blend_shapes"], shapeBlendBasis);
+        xt::from_json(model["pose_blend_shapes"], poseBlendBasis);
         m__shapeBlendBasis = shapeBlendBasis.data();// (6890, 3, 10)
         m__poseBlendBasis = poseBlendBasis.data();// (6890, 3, 207)
 
         // regressor
         xt::xarray<float> templateRestShape;
         xt::xarray<float> jointRegressor;
-        xt::from_json(m__model["vertices_template"], templateRestShape);
-        xt::from_json(m__model["joint_regressor"], jointRegressor);
+        xt::from_json(model["vertices_template"], templateRestShape);
+        xt::from_json(model["joint_regressor"], jointRegressor);
         m__templateRestShape = templateRestShape.data();// (6890, 3)
         m__jointRegressor = jointRegressor.data();// (24, 6890)
 
         // transformer
         xt::xarray<int64_t> kinematicTree;
-        xt::from_json(m__model["kinematic_tree"], kinematicTree);
+        xt::from_json(model["kinematic_tree"], kinematicTree);
         m__kinematicTree = kinematicTree.data();// (2, 24)
 
         // skinner
         xt::xarray<float> weights;
-        xt::from_json(m__model["weights"], weights);
+        xt::from_json(model["weights"], weights);
         m__weights = weights.data();// (6890, 24)
 
         loadToDevice();
