@@ -373,15 +373,13 @@ namespace smpl {
         cudaFree(d_joints);
         cudaFree(d_restShape);
         float r_restShape[5][3] =
-                {
                     {
                         {1.289135, 2.157641, 1.418457},
                         {1.812546, 0.978893, 2.390449},
                         {1.612468, 1.896739, 2.262769},
                         {1.258803, 2.193042, 1.082664},
                         {2.209583, 2.50622 , 2.045405}
-                    }
-                };
+                    };
         float r_joints[24][3] =
                 {
                    {2.595438, 4.083213, 2.913282},
@@ -654,25 +652,18 @@ namespace smpl {
         VERTEX_NUM = 1;
 
         xt::xarray<float> weights_ {
-                {
                         0.5488135 , 0.71518937, 0.60276338, 0.54488318,
                         0.4236548 , 0.64589411, 0.43758721, 0.891773  ,
                         0.96366276, 0.38344152, 0.79172504, 0.52889492,
                         0.56804456, 0.92559664, 0.07103606, 0.0871293 ,
                         0.0202184 , 0.83261985, 0.77815675, 0.87001215,
                         0.97861834, 0.79915856, 0.46147936, 0.78052918
-                }
-        };// (1, 24)
+                };// (1, 24)
         m__weights = weights_.data();
         cudaMalloc((void **) &d_weights, VERTEX_NUM * JOINT_NUM * sizeof(float));
         cudaMemcpy(d_weights, m__weights, VERTEX_NUM * JOINT_NUM * sizeof(float), cudaMemcpyHostToDevice);
 
-        xt::xarray<float> restShape {
-                {
-                        {0.11827443, 0.63992102, 0.14335329}
-                }
-        };// (1, 1, 3)
-
+        xt::xarray<float> restShape {0.11827443, 0.63992102, 0.14335329};// (1, 1, 3)
         xt::xarray<float> transformations {
                 {
                         {
