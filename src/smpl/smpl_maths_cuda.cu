@@ -4,7 +4,7 @@
 
 namespace smpl {
     namespace device {
-        __global__ void PoseBlend1(float *theta,
+        __global__ void PoseBlend1(float *theta, int JOINT_NUM,
                                    float *poseRotation, float *restPoseRotation) {
             int i = blockIdx.x;
             int j = threadIdx.x;
@@ -49,7 +49,7 @@ namespace smpl {
             restPoseRotation[i * JOINT_NUM * 9 + j * 9 + 8] = 1;
         }
 
-        __global__ void PoseBlend2(float *poseRotation, float *poseBlendBasis, float *restPoseRotation,
+        __global__ void PoseBlend2(float *poseRotation, float *poseBlendBasis, float *restPoseRotation, int JOINT_NUM, int VERTEX_NUM,
                                    float *poseBlendShape) {
             int i = blockIdx.x;
             int j = threadIdx.x;
@@ -62,7 +62,7 @@ namespace smpl {
             }
         }
 
-        __global__ void ShapeBlend(float *beta, float *shapeBlendBasis,
+        __global__ void ShapeBlend(float *beta, float *shapeBlendBasis, int VERTEX_NUM, int SHAPE_BASIS_DIM,
                                    float *shapeBlendShape) {
             int i = blockIdx.x;
             int j = threadIdx.x;
@@ -75,6 +75,7 @@ namespace smpl {
         }
 
         __global__ void RegressJoints(float *templateRestShape, float *shapeBlendShape, float *poseBlendShape, float *jointRegressor,
+                                      int JOINT_NUM, int VERTEX_NUM,
                                       float *joints, float *restShape) {
             int i = blockIdx.x;
             int j = threadIdx.x;
@@ -88,7 +89,7 @@ namespace smpl {
                             shapeBlendShape[i * VERTEX_NUM * 3 + j * 3 + l]) * jointRegressor[k * VERTEX_NUM + j];
         }
 
-        __global__ void LocalTransform(float *joints, float *kinematicTree, float *poseRotation,
+        __global__ void LocalTransform(float *joints, float *kinematicTree, float *poseRotation, int JOINT_NUM,
                                        float *localTransformations) {
             // joints [BATCH_SIZE][JOINT_NUM][3]
             // poseRotHomo [BATCH_SIZE][JOINTS_NUM][4][3]
@@ -112,7 +113,7 @@ namespace smpl {
         }
 
 
-        __global__ void GlobalTransform(float *localTransformations, float *kinematicTree,
+        __global__ void GlobalTransform(float *localTransformations, float *kinematicTree, int JOINT_NUM, int BATCH_SIZE,
                                         float *globalTransformations) {
             //global transformations [N][24][4][4]
             for (int i = 0; i < BATCH_SIZE; i++)
@@ -133,7 +134,7 @@ namespace smpl {
             }
         }
 
-        __global__ void Transform(float *globalTransformations, float *joints) {
+        __global__ void Transform(float *globalTransformations, float *joints, int JOINT_NUM) {
             int i = blockIdx.x;
             int j = threadIdx.x;
 
@@ -146,13 +147,7 @@ namespace smpl {
                 globalTransformations[i * JOINT_NUM * 16 + j * 16 + k * 4] -= elim[k];
         }
 
-        torch::Tensor SMPL::cart2homo(torch::Tensor &cart) {
-            torch::Tensor ones = torch::ones({BATCH_SIZE, VERTEX_NUM, 1}, m__device);// (N, 6890, 1)
-            torch::Tensor homo = torch::cat({cart, ones}, 2);// (N, 6890, 4)
-            return homo;
-        }
-
-        __global__ void Skinning(float *restShape, float *transformation, float *weights
+        __global__ void Skinning(float *restShape, float *transformation, float *weights, int BATCH_SIZE, int VERTEX_NUM, int JOINT_NUM,
                                  float *vertices) {
             //restShape [BATCH_SIZE][VERTEX_NUM][3]
             //transformation [BATCH_SIZE][JOINT_NUM][4][4]
@@ -221,15 +216,16 @@ namespace smpl {
         cudaMalloc((void **) &d_poseBlendShape, BATCH_SIZE * VERTEX_NUM * 3 * sizeof(float));
         cudaMemcpy(d_theta, theta, BATCH_SIZE * JOINT_NUM * 3 * sizeof(float), cudaMemcpyHostToDevice);
 
-        device::PoseBlend1<<<BATCH_SIZE,JOINT_NUM>>>(d_theta, d_poseRotation, d_restPoseRotation);
-        device::PoseBlend2<<<BATCH_SIZE,VERTEX_NUM>>>(d_poseRotation, d_poseBlendBasis, d_restPoseRotation, d_poseBlendShape);
+        device::PoseBlend1<<<BATCH_SIZE,JOINT_NUM>>>(d_theta, JOINT_NUM, d_poseRotation, d_restPoseRotation);
+        device::PoseBlend2<<<BATCH_SIZE,VERTEX_NUM>>>(d_poseRotation, d_poseBlendBasis, d_restPoseRotation,
+                                                        JOINT_NUM, VERTEX_NUM, d_poseBlendShape);
 
         float *d_beta, *d_shapeBlendShape;
         cudaMalloc((void **) &d_beta, BATCH_SIZE * SHAPE_BASIS_DIM * sizeof(float));
         cudaMalloc((void **) &d_shapeBlendShape, BATCH_SIZE * VERTEX_NUM * 3 * sizeof(float));
         cudaMemcpy(d_beta, beta, BATCH_SIZE * SHAPE_BASIS_DIM * sizeof(float), cudaMemcpyHostToDevice);
 
-        device::ShapeBlend<<<BATCH_SIZE,VERTEX_NUM>>>(d_beta, d_shapeBlendBasis, d_shapeBlendShape);
+        device::ShapeBlend<<<BATCH_SIZE,VERTEX_NUM>>>(d_beta, d_shapeBlendBasis, VERTEX_NUM, SHAPE_BASIS_DIM, d_shapeBlendShape);
 
         cudaFree(d_theta);
         cudaFree(d_beta);
@@ -244,7 +240,7 @@ namespace smpl {
         cudaMalloc((void **) &d_restShape, BATCH_SIZE * VERTEX_NUM * 3 * sizeof(float));
 
         device::RegressJoints<<<BATCH_SIZE,VERTEX_NUM>>>(d_templateRestShape, d_shapeBlendShape, d_poseBlendShape,
-                d_jointRegressor, d_joints, d_restShape);
+                d_jointRegressor, JOINT_NUM, VERTEX_NUM, d_joints, d_restShape);
 
         return {d_restShape, d_joints};
     }
@@ -255,9 +251,9 @@ namespace smpl {
         cudaMalloc((void **) &d_localTransformations, BATCH_SIZE * JOINT_NUM * 16 * sizeof(float));
         cudaMalloc((void **) &d_globalTransformations, BATCH_SIZE * JOINT_NUM * 16 * sizeof(float));
 
-        device::LocalTransform<<<BATCH_SIZE,JOINT_NUM>>>(d_joints, d_kinematicTree, d_poseRotation, d_localTransformations);
-        device::GlobalTransform<<<1,1>>>(d_localTransformations, d_kinematicTree, d_globalTransformations);
-        device::GlobalTransform<<<BATCH_SIZE,JOINT_NUM>>>(d_globalTransformations, d_joints);
+        device::LocalTransform<<<BATCH_SIZE,JOINT_NUM>>>(d_joints, d_kinematicTree, d_poseRotation, JOINT_NUM, d_localTransformations);
+        device::GlobalTransform<<<1,1>>>(d_localTransformations, d_kinematicTree, JOINT_NUM, BATCH_SIZE, d_globalTransformations);
+        device::Transform<<<BATCH_SIZE,JOINT_NUM>>>(d_globalTransformations, d_joints, JOINT_NUM);
 
         cudaFree(d_localTransformations);
         return d_globalTransformations;
@@ -268,7 +264,8 @@ namespace smpl {
         float *d_vertices;
         cudaMalloc((void **) &d_vertices, BATCH_SIZE * VERTEX_NUM * 3 * sizeof(float));
 
-        device::Skinning<<<BATCH_SIZE,VERTEX_NUM>>>(d_restShape, d_globalTransformations, d_weights, d_vertices);
+        device::Skinning<<<BATCH_SIZE,VERTEX_NUM>>>(d_restShape, d_globalTransformations, d_weights,
+                BATCH_SIZE, VERTEX_NUM, JOINT_NUM, d_vertices);
 
         cudaMemcpy(m__result_vertices, d_vertices, BATCH_SIZE * VERTEX_NUM * 3 * sizeof(float), cudaMemcpyDeviceToHost);
         cudaFree(d_vertices);
