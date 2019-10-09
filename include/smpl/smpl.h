@@ -32,7 +32,7 @@ namespace smpl {
         std::tuple<float *, float *, float *, float *> blendShape(float *theta, float *beta);
         std::tuple<float *, float *> regressJoints(float *d_shapeBlendShape, float *d_poseBlendShape);
         float * transform(float *d_poseRotation, float *d_joints);
-        void skinning(float *restShape, float *transformation);
+        void skinning(float *d_restShape, float *d_transformation);
     public:
         // Constructor and Destructor
         SMPL();

@@ -268,12 +268,12 @@ namespace smpl {
         return d_globalTransformations;
     }
 
-    void SMPL::skinning(float *restShape, float *transformation) {
+    void SMPL::skinning(float *d_restShape, float *d_transformation) {
         ///SKINNING
         float *d_vertices;
         cudaMalloc((void **) &d_vertices, BATCH_SIZE * VERTEX_NUM * 3 * sizeof(float));
 
-        device::Skinning<<<BATCH_SIZE,VERTEX_NUM>>>(d_restShape, d_globalTransformations, d_weights,
+        device::Skinning<<<BATCH_SIZE,VERTEX_NUM>>>(d_restShape, d_transformation, d_weights,
                 BATCH_SIZE, VERTEX_NUM, JOINT_NUM, d_vertices);
 
         cudaMemcpy(m__result_vertices, d_vertices, BATCH_SIZE * VERTEX_NUM * 3 * sizeof(float), cudaMemcpyDeviceToHost);
