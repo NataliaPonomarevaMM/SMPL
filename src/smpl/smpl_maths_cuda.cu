@@ -4,12 +4,12 @@
 
 namespace smpl {
     namespace device {
-        __global__ void PoseBlend1(float *theta, int JOINT_NUM,
+        __global__ void PoseBlend1(float *theta, int jointnum,
                                    float *poseRotation, float *restPoseRotation) {
             int i = blockIdx.x;
             int j = threadIdx.x;
 
-            int ind = i * JOINT_NUM * 3 + j * 3;
+            int ind = i * jointnum * 3 + j * 3;
             float norm = (theta[ind] + theta[ind + 1] + theta[ind + 2]) / std::sqrt(
                     theta[ind] * theta[ind] + theta[ind + 1] * theta[ind + 1] + theta[ind + 2] * theta[ind + 2]);
             float sin = std::sin(norm);
@@ -43,133 +43,133 @@ namespace smpl {
                 }
 
             for (int k = 0; k < 9; k++)
-                restPoseRotation[i * JOINT_NUM * 9 + j * 9 + k] = 0;
-            restPoseRotation[i * JOINT_NUM * 9 + j * 9] = 1;
-            restPoseRotation[i * JOINT_NUM * 9 + j * 9 + 4] = 1;
-            restPoseRotation[i * JOINT_NUM * 9 + j * 9 + 8] = 1;
+                restPoseRotation[i * jointnum * 9 + j * 9 + k] = 0;
+            restPoseRotation[i * jointnum * 9 + j * 9] = 1;
+            restPoseRotation[i * jointnum * 9 + j * 9 + 4] = 1;
+            restPoseRotation[i * jointnum * 9 + j * 9 + 8] = 1;
         }
 
-        __global__ void PoseBlend2(float *poseRotation, float *poseBlendBasis, float *restPoseRotation, int JOINT_NUM, int VERTEX_NUM,
+        __global__ void PoseBlend2(float *poseRotation, float *poseBlendBasis, float *restPoseRotation, int jointnum, int vertexnum,
                                    float *poseBlendShape) {
             int i = blockIdx.x;
             int j = threadIdx.x;
             for (int k = 0; k < 3; k++) {
-                poseBlendShape[i * VERTEX_NUM * 3 + j * 3 + k] = 0;
+                poseBlendShape[i * vertexnum * 3 + j * 3 + k] = 0;
                 for (int l = 0; l < 207; l++)
-                    poseBlendShape[i * VERTEX_NUM * 3 + j * 3 + k] +=
-                            (poseRotation[i * JOINT_NUM * 9 + l + 9] - restPoseRotation[i * JOINT_NUM * 9 + l + 9])
-                                                * poseBlendBasis[j * VERTEX_NUM * 3 + k * 3 + l];
+                    poseBlendShape[i * vertexnum * 3 + j * 3 + k] +=
+                            (poseRotation[i * jointnum * 9 + l + 9] - restPoseRotation[i * jointnum * 9 + l + 9])
+                                                * poseBlendBasis[j * vertexnum * 3 + k * 3 + l];
             }
         }
 
-        __global__ void ShapeBlend(float *beta, float *shapeBlendBasis, int VERTEX_NUM, int SHAPE_BASIS_DIM,
+        __global__ void ShapeBlend(float *beta, float *shapeBlendBasis, int vertexnum, int shapebasisdim,
                                    float *shapeBlendShape) {
             int i = blockIdx.x;
             int j = threadIdx.x;
             for (int k = 0; k < 3; k++) {
-                shapeBlendShape[i * VERTEX_NUM * 3 + j * 3 + k] = 0;
-                for (int l = 0; l < SHAPE_BASIS_DIM; l++)
-                    shapeBlendShape[i * VERTEX_NUM * 3 + j * 3 + k] += beta[i * SHAPE_BASIS_DIM + l] *
-                            shapeBlendBasis[j * SHAPE_BASIS_DIM * 3 + k * SHAPE_BASIS_DIM + l];// (N, 6890, 3)
+                shapeBlendShape[i * vertexnum * 3 + j * 3 + k] = 0;
+                for (int l = 0; l < shapebasisdim; l++)
+                    shapeBlendShape[i * vertexnum * 3 + j * 3 + k] += beta[i * shapebasisdim + l] *
+                            shapeBlendBasis[j * shapebasisdim * 3 + k * shapebasisdim + l];// (N, 6890, 3)
             }
         }
 
         __global__ void RegressJoints(float *templateRestShape, float *shapeBlendShape, float *poseBlendShape, float *jointRegressor,
-                                      int JOINT_NUM, int VERTEX_NUM,
+                                      int jointnum, int vertexnum,
                                       float *joints, float *restShape) {
             int i = blockIdx.x;
             int j = threadIdx.x;
             for (int k = 0; k < 3; k++) {
-                int ind = i * VERTEX_NUM * 3 + j * 3 + k;
+                int ind = i * vertexnum * 3 + j * 3 + k;
                 restShape[ind] = templateRestShape[ind] + shapeBlendShape[ind] + poseBlendShape[ind];
             }
-            for (int k = 0; k < JOINT_NUM; k++)
+            for (int k = 0; k < jointnum; k++)
                 for (int l = 0; l < 3; l++)
-                    joints[i * JOINT_NUM * 3+ k * 3 + l] += (templateRestShape[i * VERTEX_NUM * 3 + j * 3 + l] +
-                            shapeBlendShape[i * VERTEX_NUM * 3 + j * 3 + l]) * jointRegressor[k * VERTEX_NUM + j];
+                    joints[i * jointnum * 3+ k * 3 + l] += (templateRestShape[i * vertexnum * 3 + j * 3 + l] +
+                            shapeBlendShape[i * vertexnum * 3 + j * 3 + l]) * jointRegressor[k * vertexnum + j];
         }
 
-        __global__ void LocalTransform(float *joints, int *kinematicTree, float *poseRotation, int JOINT_NUM,
+        __global__ void LocalTransform(float *joints, int *kinematicTree, float *poseRotation, int jointnum,
                                        float *localTransformations) {
-            // joints [BATCH_SIZE][JOINT_NUM][3]
-            // poseRotHomo [BATCH_SIZE][JOINTS_NUM][4][3]
-            // kinematicTree [2][JOINT_NUM]
+            // joints [batchsize][jointnum][3]
+            // poseRotHomo [batchsize][JOINTS_NUM][4][3]
+            // kinematicTree [2][jointnum]
             int j = blockIdx.x;
             int i = threadIdx.x;
             //copy data from poseRotation
             for (int k = 0; k < 3; k++)
                 for (int l = 0; l < 3; l++)
-                    localTransformations[j * JOINT_NUM * 16 + i * 16 + k * 4 + l] =
-                            poseRotation[j * JOINT_NUM * 9 + i * 9 + k * 3 + l];
+                    localTransformations[j * jointnum * 16 + i * 16 + k * 4 + l] =
+                            poseRotation[j * jointnum * 9 + i * 9 + k * 3 + l];
             for (int l = 0; l < 3; l++)
-                localTransformations[j * JOINT_NUM * 16 + i * 16 + 3 * 4 + l] = 0;
+                localTransformations[j * jointnum * 16 + i * 16 + 3 * 4 + l] = 0;
             // data from joints
             int ancestor = kinematicTree[i];
             for (int k = 0; k < 3; k++)
-                localTransformations[j * JOINT_NUM * 16 + i * 16 + k * 4 + 3] =
-                        i == 0 ? joints[j * JOINT_NUM * 3 + i * 3 + k] - joints[j * JOINT_NUM * 3 + ancestor * 3 + k]
-                        : joints[j * JOINT_NUM * 3 + k];
-            localTransformations[j * JOINT_NUM * 16 + i * 16 + 3 * 4 + 3] = 1;
+                localTransformations[j * jointnum * 16 + i * 16 + k * 4 + 3] =
+                        i == 0 ? joints[j * jointnum * 3 + i * 3 + k] - joints[j * jointnum * 3 + ancestor * 3 + k]
+                        : joints[j * jointnum * 3 + k];
+            localTransformations[j * jointnum * 16 + i * 16 + 3 * 4 + 3] = 1;
         }
 
 
-        __global__ void GlobalTransform(float *localTransformations, int *kinematicTree, int JOINT_NUM, int BATCH_SIZE,
+        __global__ void GlobalTransform(float *localTransformations, int *kinematicTree, int jointnum, int batchsize,
                                         float *globalTransformations) {
             //global transformations [N][24][4][4]
-            for (int i = 0; i < BATCH_SIZE; i++)
+            for (int i = 0; i < batchsize; i++)
                 for (int k = 0; k < 4; k++)
                     for (int l = 0; l < 4; l++)
-                        globalTransformations[i * JOINT_NUM * 16 + k * 4 + l] = localTransformations[i * JOINT_NUM * 16 + k * 4 + l];
-            for (int j = 1; j < JOINT_NUM; j++) {
+                        globalTransformations[i * jointnum * 16 + k * 4 + l] = localTransformations[i * jointnum * 16 + k * 4 + l];
+            for (int j = 1; j < jointnum; j++) {
                 int anc = kinematicTree[j];
-                for (int i = 0; i < BATCH_SIZE; i++)
+                for (int i = 0; i < batchsize; i++)
                     for (int k = 0; k < 4; k++)
                         for (int l = 0; l < 4; l++) {
-                            globalTransformations[i * JOINT_NUM * 16 + j * 16 + k * 4 + l] = 0;
+                            globalTransformations[i * jointnum * 16 + j * 16 + k * 4 + l] = 0;
                             for (int t = 0; t < 4; t++)
-                                globalTransformations[i * JOINT_NUM * 16 + j * 16 + k * 4 + l] +=
-                                        globalTransformations[i * JOINT_NUM * 16 + anc * 16 + k * 4 + t] *
-                                        localTransformations[i * JOINT_NUM * 16 + j * 16 + t * 4 + l];
+                                globalTransformations[i * jointnum * 16 + j * 16 + k * 4 + l] +=
+                                        globalTransformations[i * jointnum * 16 + anc * 16 + k * 4 + t] *
+                                        localTransformations[i * jointnum * 16 + j * 16 + t * 4 + l];
                         }
             }
         }
 
-        __global__ void Transform(float *globalTransformations, float *joints, int JOINT_NUM) {
+        __global__ void Transform(float *globalTransformations, float *joints, int jointnum) {
             int i = blockIdx.x;
             int j = threadIdx.x;
 
             float elim[3] = {0};
             for (int k = 0; k < 3; k++)
                 for (int t = 0; t < 3; t++)
-                    elim[k] += globalTransformations[i * JOINT_NUM * 16 + j * 16 + k * 4 + t * 4] *
-                            joints[i * JOINT_NUM * 3 + j * 3 + t];
+                    elim[k] += globalTransformations[i * jointnum * 16 + j * 16 + k * 4 + t * 4] *
+                            joints[i * jointnum * 3 + j * 3 + t];
             for (int k = 0; k < 3; k++)
-                globalTransformations[i * JOINT_NUM * 16 + j * 16 + k * 4] -= elim[k];
+                globalTransformations[i * jointnum * 16 + j * 16 + k * 4] -= elim[k];
         }
 
-        __global__ void Skinning(float *restShape, float *transformation, float *weights, int BATCH_SIZE, int VERTEX_NUM, int JOINT_NUM,
+        __global__ void Skinning(float *restShape, float *transformation, float *weights, int batchsize, int vertexnum, int jointnum,
                                  float *vertices) {
-            //restShape [BATCH_SIZE][VERTEX_NUM][3]
-            //transformation [BATCH_SIZE][JOINT_NUM][4][4]
-            //weights [VERTEX_NUM][JOINT_NUM]
+            //restShape [batchsize][vertexnum][3]
+            //transformation [batchsize][jointnum][4][4]
+            //weights [vertexnum][jointnum]
 
             // linear blend skinning
-            for (int i = 0; i < BATCH_SIZE; i++)
-                for (int j = 0; j < VERTEX_NUM; j++) {
+            for (int i = 0; i < batchsize; i++)
+                for (int j = 0; j < vertexnum; j++) {
                     float coeffs[16] = {0};
                     for (int k = 0; k < 4; k++)
                         for (int l = 0; l < 4; l++)
-                            for (int t = 0; t < JOINT_NUM; t++)
-                                coeffs[k * 4 + l] +=weights[j * JOINT_NUM + t] * transformation[i * JOINT_NUM * 16 + t * 16 + k * 4 + l];
+                            for (int t = 0; t < jointnum; t++)
+                                coeffs[k * 4 + l] +=weights[j * jointnum + t] * transformation[i * jointnum * 16 + t * 16 + k * 4 + l];
 
                     float homoW = coeffs[15];
                     for (int t = 0; t < 3; t++)
-                        homoW += coeffs[12 + t] * restShape[i * VERTEX_NUM * 3 + j * 3 + t];
+                        homoW += coeffs[12 + t] * restShape[i * vertexnum * 3 + j * 3 + t];
                     for (int k = 0; k < 3; k++) {
-                        vertices[i * VERTEX_NUM * 3 + j * 3 + k] = coeffs[k * 4 + 3];
+                        vertices[i * vertexnum * 3 + j * 3 + k] = coeffs[k * 4 + 3];
                         for (int t = 0; t < 3; t++)
-                            vertices[i * VERTEX_NUM * 3 + j * 3 + k] += coeffs[k * 4 + t] * restShape[i * VERTEX_NUM * 3 + j * 3 + t];
-                        vertices[i * VERTEX_NUM * 3 + j * 3 + k] /= homoW;
+                            vertices[i * vertexnum * 3 + j * 3 + k] += coeffs[k * 4 + t] * restShape[i * vertexnum * 3 + j * 3 + t];
+                        vertices[i * vertexnum * 3 + j * 3 + k] /= homoW;
                     }
                 }
         }
