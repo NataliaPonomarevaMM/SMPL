@@ -29,17 +29,17 @@ namespace smpl {
             skew[7] = theta[ind];
             skew[8] = 0;
 
-            rotation[ind] = 1;
-            rotation[ind + 4] = 1;
-            rotation[ind + 8] = 1;
+            poseRotation[ind] = 1;
+            poseRotation[ind + 4] = 1;
+            poseRotation[ind + 8] = 1;
             for (int k1 = 0; k1 < 3; k1++)
                 for (int k2 = 0; k2 < 3; k2++) {
                     int k = k1 * 3 + k2;
-                    rotation[ind + k] += skew[k] * sin;
+                    poseRotation[ind + k] += skew[k] * sin;
                     float num = 0;
                     for (int l = 0; l < 3; l++)
                         num += skew[k1 * 3 + l] * skew[k * 3 + k2];
-                    rotation[ind + k] += (1 - cos) * num;// (N, 24, 3, 3)
+                    poseRotation[ind + k] += (1 - cos) * num;// (N, 24, 3, 3)
                 }
 
             for (int k = 0; k < 9; k++)
@@ -58,7 +58,7 @@ namespace smpl {
                 for (int l = 0; l < 207; l++)
                     poseBlendShape[i * VERTEX_NUM * 3 + j * 3 + k] +=
                             (poseRotation[i * JOINT_NUM * 9 + l + 9] - restPoseRotation[i * JOINT_NUM * 9 + l + 9])
-                                                * m__poseBlendBasis[j * VERTEX_NUM * 3 + k * 3 + l];
+                                                * poseBlendBasis[j * VERTEX_NUM * 3 + k * 3 + l];
             }
         }
 
@@ -74,7 +74,7 @@ namespace smpl {
             }
         }
 
-        __global__ void RegressJoints(float *templateRestShape, float *shapeBlendShape, float *poseBlendShape, float *jointRegressor
+        __global__ void RegressJoints(float *templateRestShape, float *shapeBlendShape, float *poseBlendShape, float *jointRegressor,
                                       float *joints, float *restShape) {
             int i = blockIdx.x;
             int j = threadIdx.x;
@@ -93,7 +93,6 @@ namespace smpl {
             // joints [BATCH_SIZE][JOINT_NUM][3]
             // poseRotHomo [BATCH_SIZE][JOINTS_NUM][4][3]
             // kinematicTree [2][JOINT_NUM]
-            float *localTransformations; //[N][24][4][4]
             int j = blockIdx.x;
             int i = threadIdx.x;
             //copy data from poseRotation
@@ -129,7 +128,7 @@ namespace smpl {
                             for (int t = 0; t < 4; t++)
                                 globalTransformations[i * JOINT_NUM * 16 + j * 16 + k * 4 + l] +=
                                         globalTransformations[i * JOINT_NUM * 16 + anc * 16 + k * 4 + t] *
-                                        localTransformations[i * JOINT_NUM * 16 + j * 16 + t * 4 + l]
+                                        localTransformations[i * JOINT_NUM * 16 + j * 16 + t * 4 + l];
                         }
             }
         }
