@@ -1,4 +1,3 @@
-#include <fstream>
 #include <xtensor/xarray.hpp>
 #include <xtensor/xjson.hpp>
 #include <iostream>
@@ -7,23 +6,6 @@
 #include "../../include/smpl/smpl.h"
 
 namespace smpl {
-    TEST_F(SMPL, Import) {
-        std::ifstream file("../data/smpl_female.json");
-
-        nlohmann::json model;
-        file >> model;
-
-        xt::xarray<int64_t> kinematicTree;
-        xt::from_json(model["kinematic_tree"], kinematicTree);
-
-        int64_t r_kinematicTree[2][24] = {
-                {4294967295, 0, 0, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 9, 9, 12, 13, 14, 16, 17, 18, 19, 20, 21},
-                {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23}};
-        for (int i = 0; i < 2; i++)
-            for (int j = 0; j < JOINT_NUM; j++)
-                ASSERT_EQ(r_kinematicTree[i][j], kinematicTree.at(i, j));
-    }
-
     TEST_F(SMPL, BlendShape) {
         int batchSize = BATCH_SIZE;
         int vertexNum = VERTEX_NUM;
@@ -31,7 +13,6 @@ namespace smpl {
         VERTEX_NUM = 1;
 
         xt::xarray<float> theta {
-                {
                         {0.79172504, 0.52889492, 0.56804456},
                         {0.92559664, 0.07103606, 0.0871293 },
                         {0.0202184 , 0.83261985, 0.77815675},
@@ -56,8 +37,7 @@ namespace smpl {
                         {0.60484552, 0.73926358, 0.03918779},
                         {0.28280696, 0.12019656, 0.2961402 },
                         {0.11872772, 0.31798318, 0.41426299}
-                }
-        };// (1, 24, 3)
+                };// (1, 24, 3)
         xt::xarray<float> beta {{0.5488135, 0.71518937, 0.60276338, 0.54488318, 0.4236548,
                                   0.64589411, 0.43758721, 0.891773, 0.96366276, 0.38344152}};// (1, 10)
         xt::xarray<float> poseBlendBasis {
