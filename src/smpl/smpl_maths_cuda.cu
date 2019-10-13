@@ -90,11 +90,13 @@ namespace smpl {
                                        float *joints) {
             int i = blockIdx.x;
             int j = threadIdx.x;
-            for (int l = 0; l < 3; l++)
+            for (int l = 0; l < 3; l++) {
                 joints[i * jointnum * 3 + j * 3 + l] = 0;
                 for (int k = 0; k < vertexnum; k++)
                     joints[i * jointnum * 3 + j * 3 + l] += (templateRestShape[i * vertexnum * 3 + k * 3 + l] +
-                            shapeBlendShape[i * vertexnum * 3 + k * 3 + l]) * jointRegressor[j * vertexnum + k];
+                                                             shapeBlendShape[i * vertexnum * 3 + k * 3 + l]) *
+                                                            jointRegressor[j * vertexnum + k];
+            }
         }
 
         __global__ void LocalTransform(float *joints, int64_t *kinematicTree, float *poseRotation, int jointnum,
