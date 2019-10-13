@@ -9,7 +9,7 @@ namespace smpl {
         BATCH_SIZE = 1;
         VERTEX_NUM = 1;
         
-        float *theta = {
+        float theta[72] = {
                         0.79172504, 0.52889492, 0.56804456,
                         0.92559664, 0.07103606, 0.0871293 ,
                         0.0202184 , 0.83261985, 0.77815675,
@@ -35,9 +35,9 @@ namespace smpl {
                         0.28280696, 0.12019656, 0.2961402 ,
                         0.11872772, 0.31798318, 0.41426299
                 };// (24, 3)
-        float *beta = {0.5488135, 0.71518937, 0.60276338, 0.54488318, 0.4236548,
-                                  0.64589411, 0.43758721, 0.891773, 0.96366276, 0.38344152};// (1, 10)
-        m__poseBlendBasis = {
+        float beta[10] = {0.5488135, 0.71518937, 0.60276338, 0.54488318, 0.4236548,
+                                  0.64589411, 0.43758721, 0.891773, 0.96366276, 0.38344152};// (10)
+        float m__poseBlendBasis_[621] = {
                                 0.0641475 , 0.69247212, 0.56660145, 0.26538949, 0.52324805,
                                 0.09394051, 0.5759465 , 0.9292962 , 0.31856895, 0.66741038,
                                 0.13179786, 0.7163272 , 0.28940609, 0.18319136, 0.58651293,
@@ -166,7 +166,8 @@ namespace smpl {
                                 0.02919023, 0.53491685, 0.40424362, 0.52418386, 0.36509988,
                                 0.19056691, 0.0191229 , 0.51814981, 0.84277686, 0.37321596,
                                 0.22286382, 0.080532};// (3, 207)
-        m__shapeBlendBasis = {
+        m__poseBlendBasis = m__poseBlendBasis_;
+        float m__shapeBlendBasis_[30] = {
                         0.08531092, 0.22139645, 0.10001406, 0.2650397 , 0.06614946,
                                 0.06560487, 0.85627618, 0.16212026, 0.55968241, 0.77345554,
                         0.45640957, 0.15336888, 0.19959614, 0.43298421, 0.52823409,
@@ -174,6 +175,7 @@ namespace smpl {
                         0.89569129, 0.39256879, 0.8783725 , 0.69078478, 0.98734876,
                                 0.75928245, 0.36454463, 0.50106317, 0.37638916, 0.36491184
         };// (3, 10)
+        m__shapeBlendBasis = m__shapeBlendBasis_;
         cudaMalloc((void **) &d_poseBlendBasis, VERTEX_NUM * 3 * POSE_BASIS_DIM * sizeof(float));
         cudaMemcpy(d_poseBlendBasis, m__poseBlendBasis, VERTEX_NUM * 3 * POSE_BASIS_DIM * sizeof(float), cudaMemcpyHostToDevice);
         cudaMalloc((void **) &d_shapeBlendBasis, VERTEX_NUM * 3 * SHAPE_BASIS_DIM * sizeof(float));
@@ -259,14 +261,15 @@ namespace smpl {
         BATCH_SIZE = 1;
         VERTEX_NUM = 5;
 
-        m__templateRestShape = {
+        float m__templateRestShape_[15] = {
                 0.5488135 , 0.71518937, 0.60276338,
                 0.54488318, 0.4236548 , 0.64589411,
                 0.43758721, 0.891773  , 0.96366276,
                 0.38344152, 0.79172504, 0.52889492,
                 0.56804456, 0.92559664, 0.07103606
         };// (5, 3)
-        m__jointRegressor = {
+        m__templateRestShape = m__templateRestShape_;
+        float m__jointRegressor_[120] = {
                 0.0871293 , 0.0202184 , 0.83261985, 0.77815675, 0.87001215,
                 0.97861834, 0.79915856, 0.46147936, 0.78052918, 0.11827443,
                 0.63992102, 0.14335329, 0.94466892, 0.52184832, 0.41466194,
@@ -292,19 +295,20 @@ namespace smpl {
                 0.60639321, 0.0191932 , 0.30157482, 0.66017354, 0.29007761,
                 0.61801543, 0.4287687 , 0.13547406, 0.29828233, 0.56996491
         };// (24, 5)
+        m__jointRegressor = m__jointRegressor_;
         cudaMalloc((void **) &d_templateRestShape, VERTEX_NUM * 3 * sizeof(float));
         cudaMalloc((void **) &d_jointRegressor, JOINT_NUM * VERTEX_NUM * sizeof(float));
         cudaMemcpy(d_templateRestShape, m__templateRestShape, VERTEX_NUM * 3  * sizeof(float), cudaMemcpyHostToDevice);
         cudaMemcpy(d_jointRegressor, m__jointRegressor, JOINT_NUM * VERTEX_NUM * sizeof(float), cudaMemcpyHostToDevice);
 
-        float *shapeBlendShape = {
+        float shapeBlendShape[15] = {
                         0.1494483 , 0.86812606, 0.16249293,
                         0.61555956, 0.12381998, 0.84800823,
                         0.80731896, 0.56910074, 0.4071833 ,
                         0.069167  , 0.69742877, 0.45354268,
                         0.7220556 , 0.86638233, 0.97552151
         };// (5, 3)
-        float *poseBlendShape = {
+        float poseBlendShape[15] = {
                         0.59087276, 0.57432525, 0.65320082,
                         0.65210327, 0.43141844, 0.8965466 ,
                         0.36756187, 0.43586493, 0.89192336,
@@ -384,11 +388,12 @@ namespace smpl {
         int batchSize = BATCH_SIZE;
         BATCH_SIZE = 1;
 
-        m__kinematicTree = {
+        float m__kinematicTree_[48] = {
                 4294967295, 0, 0, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 9, 9, 12, 13, 14, 16, 17, 18, 19, 20, 21,
                 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23
         };// (2, 24)
-        float *joints = {
+        m__kinematicTree = m__kinematicTree_;
+        float joints[72] = {
                         0.5488135 , 0.71518937, 0.60276338,
                         0.54488318, 0.4236548 , 0.64589411,
                         0.43758721, 0.891773  , 0.96366276,
@@ -414,7 +419,7 @@ namespace smpl {
                         0.82099323, 0.09710128, 0.83794491,
                         0.09609841, 0.97645947, 0.4686512
         };// (24, 3)
-        float *poseRotation = {
+        float poseRotation[216] = {
                                 0.95627849, 0.89187929, 0.90854612,
                                 0.03836603, 0.41701503, 0.14772014,
                                 0.28993016, 0.17507081, 0.39079753,
@@ -577,7 +582,7 @@ namespace smpl {
         BATCH_SIZE = 1;
         VERTEX_NUM = 1;
 
-        m__weights = {
+        float m__weights_[24] = {
                         0.5488135 , 0.71518937, 0.60276338, 0.54488318,
                         0.4236548 , 0.64589411, 0.43758721, 0.891773  ,
                         0.96366276, 0.38344152, 0.79172504, 0.52889492,
@@ -585,11 +590,12 @@ namespace smpl {
                         0.0202184 , 0.83261985, 0.77815675, 0.87001215,
                         0.97861834, 0.79915856, 0.46147936, 0.78052918
                 };// (24)
+        m__weights = m__weights_;
         cudaMalloc((void **) &d_weights, VERTEX_NUM * JOINT_NUM * sizeof(float));
         cudaMemcpy(d_weights, m__weights, VERTEX_NUM * JOINT_NUM * sizeof(float), cudaMemcpyHostToDevice);
 
-        float *restShape = {0.11827443, 0.63992102, 0.14335329};// (3)
-        float *transformations = {
+        float restShape[3] = {0.11827443, 0.63992102, 0.14335329};// (3)
+        float transformations[384] = {
                                 0.94466892, 0.52184832, 0.41466194, 0.26455561,
                                 0.77423369, 0.45615033, 0.56843395, 0.0187898 ,
                                 0.6176355 , 0.61209572, 0.616934  , 0.94374808,
