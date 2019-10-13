@@ -53,13 +53,13 @@ namespace smpl {
 
         __global__ void PoseBlend2(float *poseRotation, float *poseBlendBasis, float *restPoseRotation, int jointnum, int vertexnum,
                                    float *poseBlendShape) {
-            int i = blockIdx.x;
-            int j = threadIdx.x;
+            int i = blockIdx.x; // batch size
+            int j = threadIdx.x; // vertex num
             for (int k = 0; k < 3; k++) {
                 poseBlendShape[i * vertexnum * 3 + j * 3 + k] = 0;
                 for (int l = 0; l < 207; l++)
                     poseBlendShape[i * vertexnum * 3 + j * 3 + k] +=
-                            (poseRotation[i * jointnum * 9 + l * 9 + 8] - restPoseRotation[i * jointnum * 9 + l * 9 + 8])
+                            (poseRotation[i * jointnum * 9 + l + 9] - restPoseRotation[i * jointnum * 9 + l + 9])
                                                 * poseBlendBasis[j * 3 * 207 + k * 207 + l];
             }
         }
