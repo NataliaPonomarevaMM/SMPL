@@ -9,7 +9,7 @@
 
 namespace smpl {
     TEST_F(SMPL, Import) {
-        std::ifstream file("../data/smpl_female.json");
+        std::ifstream file("../../data/smpl_female.json");
 
         nlohmann::json model;
         file >> model;
