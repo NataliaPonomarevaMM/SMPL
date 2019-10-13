@@ -188,10 +188,10 @@ namespace smpl {
         auto d_poseBlendShape = std::get<2>(bs);
         auto d_shapeBlendShape = std::get<3>(bs);
 
-        float *poseRotation = (float *)malloc(BATCH_SIZE * JOINT_NUM * 9),
-            *restPoseRotation = (float *)malloc(BATCH_SIZE * JOINT_NUM * 9),
-            *poseBlendShape = (float *)malloc(BATCH_SIZE * VERTEX_NUM * 3),
-            *shapeBlendShape = (float *)malloc(BATCH_SIZE * VERTEX_NUM * 3);
+        float *poseRotation = (float *)malloc(BATCH_SIZE * JOINT_NUM * 9 * sizeof(float)),
+            *restPoseRotation = (float *)malloc(BATCH_SIZE * JOINT_NUM * 9 * sizeof(float)),
+            *poseBlendShape = (float *)malloc(BATCH_SIZE * VERTEX_NUM * 3 * sizeof(float)),
+            *shapeBlendShape = (float *)malloc(BATCH_SIZE * VERTEX_NUM * 3 * sizeof(float));
         cudaMemcpy(poseRotation, d_poseRotation, BATCH_SIZE * JOINT_NUM * 9 * sizeof(float), cudaMemcpyDeviceToHost);
         cudaMemcpy(restPoseRotation, d_restPoseRotation, BATCH_SIZE * JOINT_NUM * 9 * sizeof(float), cudaMemcpyDeviceToHost);
         cudaMemcpy(poseBlendShape, d_poseBlendShape, BATCH_SIZE * VERTEX_NUM * 3 * sizeof(float), cudaMemcpyDeviceToHost);
@@ -246,10 +246,10 @@ namespace smpl {
             for (int k = 0; k < 3; k++)
                 EXPECT_FLOAT_EQ(r_restPoseRotation[j][k], restPoseRotation[j * 3 + k]);
 
-        //free(shapeBlendShape);
-        //free(poseBlendShape);
-        //free(poseRotation);
-        //free(restPoseRotation);
+        free(shapeBlendShape);
+        free(poseBlendShape);
+        free(poseRotation);
+        free(restPoseRotation);
 
         BATCH_SIZE = batchSize;
         VERTEX_NUM = vertexNum;
