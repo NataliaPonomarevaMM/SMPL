@@ -23,7 +23,7 @@ namespace smpl {
 
         ///GPU
         float *d_poseBlendBasis, *d_shapeBlendBasis, *d_templateRestShape, *d_jointRegressor, *d_weights;
-        int *d_kinematicTree;
+        int64_t *d_kinematicTree;
 
         void loadToDevice();
         std::tuple<float *, float *, float *, float *> blendShape(float *theta, float *beta);
