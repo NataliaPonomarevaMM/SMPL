@@ -234,22 +234,22 @@ namespace smpl {
         float r_restPoseRotation[3][3] = {{1., 0., 0.}, {0., 1., 0.}, {0., 0., 1.}};
 
         for (int i = 0; i < 3; i++)
-            EXPECT_FLOAT_EQ(r_shapeBlendShape[i], shapeBlendShape[i]);
+            EXPECT_NEAR(r_shapeBlendShape[i], shapeBlendShape[i], 0.000001);
         for (int i = 0; i < 3; i++)
-            EXPECT_FLOAT_EQ(r_poseBlendShape[i], poseBlendShape[i]);
+            EXPECT_NEAR(r_poseBlendShape[i], poseBlendShape[i], 0.000001);
 
         for (int i = 0; i < 5; i++)
             for (int j = 0; j < 3; j++)
                 for (int k = 0; k < 3; k++)
-                    EXPECT_FLOAT_EQ(r_poseRotation[i][j][k], poseRotation[i * 9 + j * 3 + k]);
+                    EXPECT_NEAR(r_poseRotation[i][j][k], poseRotation[i * 9 + j * 3 + k], 0.000001);
         for (int j = 0; j < 3; j++)
             for (int k = 0; k < 3; k++)
-                EXPECT_FLOAT_EQ(r_restPoseRotation[j][k], restPoseRotation[j * 3 + k]);
+                EXPECT_NEAR(r_restPoseRotation[j][k], restPoseRotation[j * 3 + k], 0.000001);
 
-        //free(shapeBlendShape);
-        //free(poseBlendShape);
-        //free(poseRotation);
-        //free(restPoseRotation);
+        free(shapeBlendShape);
+        free(poseBlendShape);
+        free(poseRotation);
+        free(restPoseRotation);
 
         BATCH_SIZE = batchSize;
         VERTEX_NUM = vertexNum;
@@ -372,10 +372,10 @@ namespace smpl {
                 };
         for (int j = 0; j < VERTEX_NUM; j++)
             for (int k = 0; k < 3; k++)
-                EXPECT_FLOAT_EQ(r_restShape[j][k], restShape[j * 3 + k]);
+                EXPECT_NEAR(r_restShape[j][k], restShape[j * 3 + k], 0.000001);
         for (int j = 0; j < JOINT_NUM; j++)
             for (int k = 0; k < 3; k++)
-                EXPECT_FLOAT_EQ(r_joints[j][k], joints[j * 3 + k]);
+                EXPECT_NEAR(r_joints[j][k], joints[j * 3 + k], 0.000001);
 
         free(joints);
         free(restShape);
@@ -570,7 +570,7 @@ namespace smpl {
         for (int i = 0; i < 5; i++)
             for (int j = 0; j < 4; j++)
                 for (int k = 0; k < 4; k++)
-                    EXPECT_FLOAT_EQ(r_transformations[i][j][k], transformation[i * 16 + j * 4 + k]);
+                    EXPECT_NEAR(r_transformations[i][j][k], transformation[i * 16 + j * 4 + k], 0.000001);
 
         free(transformation);
         BATCH_SIZE = batchSize;
@@ -730,7 +730,7 @@ namespace smpl {
         float r_vertices[3] = {1.077754, 1.091551, 1.083642};
 
         for (int i = 0; i < 3; i++)
-            EXPECT_FLOAT_EQ(r_vertices[i], m__result_vertices[i]);
+            EXPECT_NEAR(r_vertices[i], m__result_vertices[i], 0.000001);
 
         BATCH_SIZE = batchSize;
         VERTEX_NUM = vertexNum;
