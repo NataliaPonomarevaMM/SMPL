@@ -246,10 +246,10 @@ namespace smpl {
             for (int k = 0; k < 3; k++)
                 EXPECT_FLOAT_EQ(r_restPoseRotation[j][k], restPoseRotation[j * 3 + k]);
 
-        free(shapeBlendShape);
-        free(poseBlendShape);
-        free(poseRotation);
-        free(restPoseRotation);
+        //free(shapeBlendShape);
+        //free(poseBlendShape);
+        //free(poseRotation);
+        //free(restPoseRotation);
 
         BATCH_SIZE = batchSize;
         VERTEX_NUM = vertexNum;

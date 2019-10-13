@@ -10,8 +10,7 @@ namespace smpl {
             int j = threadIdx.x;
 
             int ind = i * jointnum * 3 + j * 3;
-            float norm = (theta[ind] + theta[ind + 1] + theta[ind + 2]) / std::sqrt(
-                    theta[ind] * theta[ind] + theta[ind + 1] * theta[ind + 1] + theta[ind + 2] * theta[ind + 2]);
+            float norm = std::sqrt(theta[ind] * theta[ind] + theta[ind + 1] * theta[ind + 1] + theta[ind + 2] * theta[ind + 2]);
             float sin = std::sin(norm);
             float cos = std::cos(norm);
             theta[ind] /= norm;
@@ -41,7 +40,7 @@ namespace smpl {
                     poseRotation[ind + k] += skew[k] * sin;
                     float num = 0;
                     for (int l = 0; l < 3; l++)
-                        num += skew[k1 * 3 + l] * skew[k * 3 + k2];
+                        num += skew[k1 * 3 + l] * skew[l * 3 + k2];
                     poseRotation[ind + k] += (1 - cos) * num;// (N, 24, 3, 3)
                 }
 
