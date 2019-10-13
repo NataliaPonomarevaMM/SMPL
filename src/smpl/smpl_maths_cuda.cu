@@ -59,8 +59,8 @@ namespace smpl {
                 poseBlendShape[i * vertexnum * 3 + j * 3 + k] = 0;
                 for (int l = 0; l < 207; l++)
                     poseBlendShape[i * vertexnum * 3 + j * 3 + k] +=
-                            (poseRotation[i * jointnum * 9 + l + 8] - restPoseRotation[i * jointnum * 9 + l + 8])
-                                                * poseBlendBasis[j * vertexnum * 3 + k * 3 + l];
+                            (poseRotation[i * jointnum * 9 + l * 9 + 8] - restPoseRotation[i * jointnum * 9 + l * 9 + 8])
+                                                * poseBlendBasis[j * 3 * 207 + k * 207 + l];
             }
         }
 
