@@ -9,8 +9,8 @@
 
 namespace smpl {
     SMPL::SMPL() :
-            m__modelPath(nullptr),
-            m__vertPath(nullptr),
+            m__modelPath(""),
+            m__vertPath(""),
             m__faceIndices(nullptr),
             m__shapeBlendBasis(nullptr),
             m__poseBlendBasis(nullptr),

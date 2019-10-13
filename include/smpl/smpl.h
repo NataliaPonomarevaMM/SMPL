@@ -8,8 +8,8 @@
 namespace smpl {
     class SMPL : public ::testing::Test {
     protected:
-        std::string m__modelPath; // Path to the JSON model file.
-        std::string m__vertPath; // Path to store the mesh OBJ file.
+        std::string m__modelPath = ""; // Path to the JSON model file.
+        std::string m__vertPath = ""; // Path to store the mesh OBJ file.
         /// CPU
         int32_t *m__faceIndices; // Vertex indices of each face, (13776, 3)
         float *m__shapeBlendBasis; // Basis of the shape-dependent shape space, (6890, 3, 10).
