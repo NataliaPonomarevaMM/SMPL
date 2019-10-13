@@ -284,21 +284,21 @@ namespace smpl {
 
     SMPL::~SMPL() {
         //CPU
-        free(m__faceIndices);
-        free(m__shapeBlendBasis);
-        free(m__poseBlendBasis);
-        free(m__templateRestShape);
-        free(m__jointRegressor);
-        free(m__kinematicTree);
-        free(m__weights);
-        free(m__result_vertices);
+//        free(m__faceIndices);
+//        free(m__shapeBlendBasis);
+//        free(m__poseBlendBasis);
+//        free(m__templateRestShape);
+//        free(m__jointRegressor);
+//        free(m__kinematicTree);
+//        free(m__weights);
+//        free(m__result_vertices);
 
         ///GPU
-        cudaFree(d_poseBlendBasis);
-        cudaFree(d_shapeBlendBasis);
-        cudaFree(d_templateRestShape);
-        cudaFree(d_jointRegressor);
-        cudaFree(d_weights);
-        cudaFree(d_kinematicTree);
+//        cudaFree(d_poseBlendBasis);
+//        cudaFree(d_shapeBlendBasis);
+//        cudaFree(d_templateRestShape);
+//        cudaFree(d_jointRegressor);
+//        cudaFree(d_weights);
+//        cudaFree(d_kinematicTree);
     }
 }
