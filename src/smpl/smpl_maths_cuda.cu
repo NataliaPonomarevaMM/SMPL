@@ -29,6 +29,9 @@ namespace smpl {
             skew[7] = theta[ind];
             skew[8] = 0;
 
+            ind = ind * 3;
+            for (int p = 0; p < 0; p++)
+                poseRotation[ind + p] = 0;
             poseRotation[ind] = 1;
             poseRotation[ind + 4] = 1;
             poseRotation[ind + 8] = 1;
@@ -43,10 +46,10 @@ namespace smpl {
                 }
 
             for (int k = 0; k < 9; k++)
-                restPoseRotation[i * jointnum * 9 + j * 9 + k] = 0;
-            restPoseRotation[i * jointnum * 9 + j * 9] = 1;
-            restPoseRotation[i * jointnum * 9 + j * 9 + 4] = 1;
-            restPoseRotation[i * jointnum * 9 + j * 9 + 8] = 1;
+                restPoseRotation[ind + k] = 0;
+            restPoseRotation[ind] = 1;
+            restPoseRotation[ind + 4] = 1;
+            restPoseRotation[ind + 8] = 1;
         }
 
         __global__ void PoseBlend2(float *poseRotation, float *poseBlendBasis, float *restPoseRotation, int jointnum, int vertexnum,
@@ -57,7 +60,7 @@ namespace smpl {
                 poseBlendShape[i * vertexnum * 3 + j * 3 + k] = 0;
                 for (int l = 0; l < 207; l++)
                     poseBlendShape[i * vertexnum * 3 + j * 3 + k] +=
-                            (poseRotation[i * jointnum * 9 + l + 9] - restPoseRotation[i * jointnum * 9 + l + 9])
+                            (poseRotation[i * jointnum * 9 + l + 8] - restPoseRotation[i * jointnum * 9 + l + 8])
                                                 * poseBlendBasis[j * vertexnum * 3 + k * 3 + l];
             }
         }
