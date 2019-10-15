@@ -287,9 +287,10 @@ namespace smpl {
         float *d_vertices;
         cudaMalloc((void **) &d_vertices, BATCH_SIZE * VERTEX_NUM * 3 * sizeof(float));
 
-        //device::Skinning<<<BATCH_SIZE,VERTEX_NUM>>>(d_restShape, d_transformation, d_weights,
-        //        BATCH_SIZE, VERTEX_NUM, JOINT_NUM, d_vertices);
+        device::Skinning<<<BATCH_SIZE,VERTEX_NUM>>>(d_restShape, d_transformation, d_weights,
+                BATCH_SIZE, VERTEX_NUM, JOINT_NUM, d_vertices);
 
+        m__result_vertices = (float *)malloc(BATCH_SIZE * VERTEX_NUM * 3 * sizeof(float)),
         cudaMemcpy(m__result_vertices, d_vertices, BATCH_SIZE * VERTEX_NUM * 3 * sizeof(float), cudaMemcpyDeviceToHost);
         cudaFree(d_vertices);
     }
