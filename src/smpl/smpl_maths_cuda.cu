@@ -150,7 +150,7 @@ namespace smpl {
 
             float elim[3];
             for (int k = 0; k < 3; k++)
-                elim[k] = joints[i * jointnum * 3 + j * 3 + k];
+                elim[k] = globalTransformations[i * jointnum * 16 + j * 16 + 0 * 4 + k * 4];
 
 //            float elim[3];
 //            for (int k = 0; k < 3; k++) {
@@ -160,7 +160,7 @@ namespace smpl {
 //                               joints[i * jointnum * 3 + j * 3 + t];
 //            }
             for (int k = 0; k < 3; k++)
-                globalTransformations[i * jointnum * 16 + j * 16 + k * 4 + 3] -= elim[k];
+                globalTransformations[i * jointnum * 16 + j * 16 + k * 4 + 3] = elim[k];
         }
 
         __global__ void Skinning(float *restShape, float *transformation, float *weights, int batchsize, int vertexnum, int jointnum,
