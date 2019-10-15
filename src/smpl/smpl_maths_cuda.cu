@@ -149,16 +149,12 @@ namespace smpl {
             int j = threadIdx.x;
 
             float elim[3];
-            for (int k = 0; k < 3; k++)
-                elim[k] = globalTransformations[i * jointnum * 16 + j * 16 + 0 * 4 + k * 4];
-
-//            float elim[3];
-//            for (int k = 0; k < 3; k++) {
-//                elim[k] = 0;
-//                for (int t = 0; t < 3; t++)
-//                    elim[k] += globalTransformations[i * jointnum * 16 + j * 16 + t * 4 + k * 4] *
-//                               joints[i * jointnum * 3 + j * 3 + t];
-//            }
+            for (int k = 0; k < 3; k++) {
+                elim[k] = 0;
+                for (int t = 0; t < 3; t++)
+                    elim[k] += globalTransformations[i * jointnum * 16 + j * 16 + t * 4 + k * 4] *
+                               joints[i * jointnum * 3 + j * 3 + t];
+            }
             for (int k = 0; k < 3; k++)
                 globalTransformations[i * jointnum * 16 + j * 16 + k * 4 + 3] = elim[k];
         }
