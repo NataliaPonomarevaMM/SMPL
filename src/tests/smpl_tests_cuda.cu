@@ -567,11 +567,19 @@ namespace smpl {
                     }
                 };
 
-        for (int k = 0; k < 4; k++) {
-            for (int t = 0; t < 4; t++)
+        for (int k = 0; k < 3; k++) {
+            for (int t = 0; t < 3; t++)
                 std::cout << transformation[k * 4 + t] << " ";
             std::cout << "\n";
         }
+        float r[3] = {0};
+        float f[3] = { 0.5488135 , 0.71518937, 0.60276338};
+        for (int i = 0; i < 3; i++) {
+            for (int j = 0; j < 3; j++)
+                r[i] += transformation[i * 4 + j] * f[j];
+            std::cout << r[i] << " ";
+        }
+std::cout << "\n";
         for (int i = 0; i < 5; i++)
             for (int j = 0; j < 4; j++)
                 for (int k = 0; k < 4; k++)
