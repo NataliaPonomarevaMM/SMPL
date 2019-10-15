@@ -117,7 +117,7 @@ namespace smpl {
             int ancestor = kinematicTree[i];
             for (int k = 0; k < 3; k++)
                 localTransformations[j * jointnum * 16 + i * 16 + k * 4 + 3] =
-                        i == 0 ? joints[j * jointnum * 3 + i * 3 + k] - joints[j * jointnum * 3 + ancestor * 3 + k]
+                        i != 0 ? joints[j * jointnum * 3 + i * 3 + k] - joints[j * jointnum * 3 + ancestor * 3 + k]
                         : joints[j * jointnum * 3 + k];
             localTransformations[j * jointnum * 16 + i * 16 + 3 * 4 + 3] = 1;
         }
@@ -154,7 +154,7 @@ namespace smpl {
                     elim[k] += globalTransformations[i * jointnum * 16 + j * 16 + k * 4 + t * 4] *
                             joints[i * jointnum * 3 + j * 3 + t];
             for (int k = 0; k < 3; k++)
-                globalTransformations[i * jointnum * 16 + j * 16 + k * 4] -= elim[k];
+                globalTransformations[i * jointnum * 16 + j * 16 + k * 4 + 3] -= elim[k];
         }
 
         __global__ void Skinning(float *restShape, float *transformation, float *weights, int batchsize, int vertexnum, int jointnum,
