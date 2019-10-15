@@ -569,7 +569,7 @@ namespace smpl {
 
         for (int k = 0; k < 4; k++) {
             for (int t = 0; t < 4; t++)
-                std::cout << transformation[j * 4 + k] << " ";
+                std::cout << transformation[k * 4 + t] << " ";
             std::cout << "\n";
         }
         for (int i = 0; i < 5; i++)
