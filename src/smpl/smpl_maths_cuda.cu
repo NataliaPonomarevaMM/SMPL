@@ -153,7 +153,7 @@ namespace smpl {
                 elim[k] = 0;
             for (int k = 0; k < 3; k++)
                 for (int t = 0; t < 3; t++)
-                    elim[k] += globalTransformations[i * jointnum * 16 + j * 16 + t * 4 + k * 4] *
+                    elim[k] += globalTransformations[i * jointnum * 16 + j * 16 + k * 4 + t * 4] *
                             joints[i * jointnum * 3 + j * 3 + t];
             for (int k = 0; k < 3; k++)
                 globalTransformations[i * jointnum * 16 + j * 16 + k * 4 + 3] -= elim[k];
@@ -276,7 +276,7 @@ namespace smpl {
 
         device::LocalTransform<<<BATCH_SIZE,JOINT_NUM>>>(d_joints, d_kinematicTree, d_poseRotation, JOINT_NUM, d_localTransformations);
         device::GlobalTransform<<<1,1>>>(d_localTransformations, d_kinematicTree, JOINT_NUM, BATCH_SIZE, d_globalTransformations);
-        device::Transform<<<BATCH_SIZE,JOINT_NUM>>>(d_globalTransformations, d_joints, JOINT_NUM);
+        //device::Transform<<<BATCH_SIZE,JOINT_NUM>>>(d_globalTransformations, d_joints, JOINT_NUM);
 
         cudaFree(d_localTransformations);
         return d_globalTransformations;
