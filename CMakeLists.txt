@@ -7,9 +7,14 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 enable_language(CUDA)
 
-set(xtensor_DIR /usr/local/Cellar/xtensor/lib/cmake/xtensor)
-set(xtl_DIR //anaconda3/pkgs/xtl-0.6.5-h770b8ee_0/lib/cmake/xtl)
-set(nlohmann_json_DIR /Users/Natalia/Documents/nlohmann_json/build)
+set(xtensor_DIR  /home/nponomareva/usr/local/lib/cmake/xtensor)
+set(xtl_DIR  /home/nponomareva/usr/local/lib/cmake/xtl)
+set(nlohmann_json_DIR  /home/nponomareva/usr/local/lib/cmake/nlohmann_json)
+set(GTest_DIR /home/nponomareva/usr/local/lib/cmake/GTest)
+set(GTEST_LIBRARY /home/nponomareva/usr/local/lib/libgtest.a)
+set(GTEST_MAIN_LIBRARY /home/nponomareva/usr/local/lib/libgtest_main.a)
+set(GTEST_INCLUDE_DIR /home/nponomareva/usr/local/include/gtest)
+
 
 include_directories(/usr/local/include)
 
@@ -43,7 +48,7 @@ set(PROJECT_LIBRARIES
         ${xtensor_blas_LIBRARIES}
         nlohmann_json::nlohmann_json
         # stdc++fs                        # std::experimental::filesystem
-        /usr/local/lib/libgtest.a
+        ${GTEST_LIBRARY}
         )
 
 set(CMAKE_EXE_LINKER_FLAGS "")
