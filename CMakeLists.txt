@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.10)
-project(DynamicFusion)
+project(DoubleFusion)
 
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -32,10 +32,10 @@ file(GLOB SOURCE "src/smpl/*.cpp" "src/tests/*.cpp" "src/*.cpp")
 ##
 ## INCLUDE DIRECTORIES
 ##
-set(DYNAMIC_FUSION_INCLUDE_DIRS "include")
+set(DOUBLE_FUSION_INCLUDE_DIRS "include")
 
 set(PROJECT_INCLUDE_DIRS
-        ${DYNAMIC_FUSION_INCLUDE_DIRS}
+        ${DOUBLE_FUSION_INCLUDE_DIRS}
         ${GLEW_INCLUDE_DIRS}
         ${xtensor_INCLUDE_DIRS}
         )
@@ -53,6 +53,6 @@ set(PROJECT_LIBRARIES
 
 set(CMAKE_EXE_LINKER_FLAGS "")
 
-add_executable(DynamicFusion ${HEADER} ${SOURCE} src/smpl/smpl_maths_cuda.cu src/tests/smpl_tests_cuda.cu)
-target_include_directories(DynamicFusion PRIVATE ${PROJECT_INCLUDE_DIRS})
-target_link_libraries(DynamicFusion ${PROJECT_LIBRARIES})
+add_executable(DoubleFusion ${HEADER} ${SOURCE} src/smpl/smpl_maths_cuda.cu src/tests/smpl_tests_cuda.cu)
+target_include_directories(DoubleFusion PRIVATE ${PROJECT_INCLUDE_DIRS})
+target_link_libraries(DoubleFusion ${PROJECT_LIBRARIES})
