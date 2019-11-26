@@ -22,7 +22,7 @@ namespace smpl {
         cudaMemcpy(d_weights, m__weights, VERTEX_NUM * JOINT_NUM * sizeof(float), cudaMemcpyHostToDevice);
     }
 
-    void SMPL::run(float *beta, float *theta) {
+    float *SMPL::run(float *beta, float *theta) {
         auto bs = blendShape(beta, theta);
         auto d_poseRotation = std::get<0>(bs);
         auto d_restPoseRotation = std::get<1>(bs);
@@ -39,9 +39,11 @@ namespace smpl {
         auto d_transformation = transform(d_poseRotation, d_joints);
         cudaFree(d_poseRotation);
         cudaFree(d_joints);
-        skinning(d_restShape, d_transformation);
+        float *res = skinning(d_restShape, d_transformation);
         cudaFree(d_restShape);
         cudaFree(d_transformation);
+
+        return res;
     }
 
     SMPL::~SMPL() {
@@ -60,8 +62,6 @@ namespace smpl {
             free(m__kinematicTree);
         if (m__weights != nullptr)
             free(m__weights);
-        if (m__result_vertices != nullptr)
-            free(m__result_vertices);
 
         ///GPU
         if (d_poseBlendBasis != nullptr)

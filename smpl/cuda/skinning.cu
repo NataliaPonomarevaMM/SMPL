@@ -34,7 +34,7 @@ namespace smpl {
         }
     }
 
-    void SMPL::skinning(float *d_restShape, float *d_transformation) {
+    float *SMPL::skinning(float *d_restShape, float *d_transformation) {
         ///SKINNING
         float *d_vertices;
         cudaMalloc((void **) &d_vertices, BATCH_SIZE * VERTEX_NUM * 3 * sizeof(float));
@@ -42,8 +42,9 @@ namespace smpl {
         device::Skinning<<<BATCH_SIZE,VERTEX_NUM>>>(d_restShape, d_transformation, d_weights,
                 BATCH_SIZE, VERTEX_NUM, JOINT_NUM, d_vertices);
 
-        m__result_vertices = (float *)malloc(BATCH_SIZE * VERTEX_NUM * 3 * sizeof(float)),
-                cudaMemcpy(m__result_vertices, d_vertices, BATCH_SIZE * VERTEX_NUM * 3 * sizeof(float), cudaMemcpyDeviceToHost);
+        float *result_vertices = (float *)malloc(BATCH_SIZE * VERTEX_NUM * 3 * sizeof(float));
+        cudaMemcpy(result_vertices, d_vertices, BATCH_SIZE * VERTEX_NUM * 3 * sizeof(float), cudaMemcpyDeviceToHost);
         cudaFree(d_vertices);
+        return result_vertices;
     }
 }

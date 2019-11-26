@@ -723,15 +723,16 @@ namespace smpl {
         cudaMemcpy(d_transformations, transformations, BATCH_SIZE * JOINT_NUM * 16 * sizeof(float), cudaMemcpyHostToDevice);
         cudaMemcpy(d_restShape, restShape, BATCH_SIZE * VERTEX_NUM * 3 * sizeof(float), cudaMemcpyHostToDevice);
 
-        skinning(d_restShape, d_transformations);
+        float *result_vertices = skinning(d_restShape, d_transformations);
         cudaFree(d_restShape);
         cudaFree(d_transformations);
 
         float r_vertices[3] = {1.077754, 1.091551, 1.083642};
 
         for (int i = 0; i < 3; i++)
-            EXPECT_NEAR(r_vertices[i], m__result_vertices[i], 0.000001);
+            EXPECT_NEAR(r_vertices[i], result_vertices[i], 0.000001);
 
+        free(result_vertices);
         BATCH_SIZE = batchSize;
         VERTEX_NUM = vertexNum;
     }
