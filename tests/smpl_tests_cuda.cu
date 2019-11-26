@@ -1,6 +1,6 @@
 #include <gtest/gtest.h>
-#include "../../include/def.h"
-#include "../../include/smpl/smpl.h"
+#include "../smpl/def.h"
+#include "../smpl/smpl.h"
 
 namespace smpl {
     TEST_F(SMPL, BlendShape) {

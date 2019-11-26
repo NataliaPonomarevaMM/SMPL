@@ -1,4 +1,4 @@
-#include "../include/def.h"
+#include "def.h"
 
 namespace smpl {
     int64_t batch_size = 1;// 1

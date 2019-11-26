@@ -26,20 +26,14 @@ find_package(nlohmann_json REQUIRED)
 find_package(GTest REQUIRED)
 
 
-file(GLOB HEADER "include/smpl/*.h" "include/tests/*.h" "include/*.h")
-file(GLOB SOURCE "src/smpl/*.cpp" "src/tests/*.cpp" "src/*.cpp")
-
-##
-## INCLUDE DIRECTORIES
-##
-set(DOUBLE_FUSION_INCLUDE_DIRS "include")
+file(GLOB HEADER "*.h")
+file(GLOB SOURCE "*.cpp" "*.cu")
 
 set(PROJECT_INCLUDE_DIRS
         ${DOUBLE_FUSION_INCLUDE_DIRS}
         ${GLEW_INCLUDE_DIRS}
         ${xtensor_INCLUDE_DIRS}
         )
-
 ##
 ## LIBRARIES
 ##
@@ -47,12 +41,11 @@ set(PROJECT_LIBRARIES
         xtensor
         ${xtensor_blas_LIBRARIES}
         nlohmann_json::nlohmann_json
-        # stdc++fs                        # std::experimental::filesystem
         ${GTEST_LIBRARY}
         )
 
 set(CMAKE_EXE_LINKER_FLAGS "")
 
-add_executable(DoubleFusion ${HEADER} ${SOURCE} src/smpl/smpl_maths_cuda.cu src/tests/smpl_tests_cuda.cu)
+add_executable(DoubleFusion ${HEADER} ${SOURCE} smpl/cuda/smpl_maths_cuda.cu tests/smpl_tests_cuda.cu)
 target_include_directories(DoubleFusion PRIVATE ${PROJECT_INCLUDE_DIRS})
 target_link_libraries(DoubleFusion ${PROJECT_LIBRARIES})

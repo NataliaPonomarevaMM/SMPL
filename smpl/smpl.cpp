@@ -3,9 +3,9 @@
 #include <nlohmann/json.hpp>
 #include <xtensor/xarray.hpp>
 #include <xtensor/xjson.hpp>
-#include "../../include/smpl/exception.h"
-#include "../../include/smpl/smpl.h"
-#include "../../include/def.h"
+#include "exception.h"
+#include "smpl.h"
+#include "def.h"
 
 namespace smpl {
     SMPL::SMPL() :

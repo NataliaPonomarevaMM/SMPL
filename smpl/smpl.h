@@ -28,7 +28,7 @@ namespace smpl {
         void loadToDevice();
         std::tuple<float *, float *, float *, float *> blendShape(float *theta, float *beta);
         std::tuple<float *, float *> regressJoints(float *d_shapeBlendShape, float *d_poseBlendShape);
-        float * transform(float *d_poseRotation, float *d_joints);
+        float *transform(float *d_poseRotation, float *d_joints);
         void skinning(float *d_restShape, float *d_transformation);
     public:
         // Constructor and Destructor
@@ -44,7 +44,7 @@ namespace smpl {
         // Export the deformed mesh to OBJ file.
         void out(int64_t index);
 
-        float *LBS(float *vertex);
+        float *LBS(float *beta, float *theta, float *vertex);
     };
 } // namespace smpl
 #endif // SMPL_H
