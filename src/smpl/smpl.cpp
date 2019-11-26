@@ -29,32 +29,11 @@ namespace smpl {
     }
 
     SMPL::SMPL(std::string &modelPath, std::string &vertPath) {
-//        std::experimental::filesystem::path path(modelPath);
-//        if (std::experimental::filesystem::exists(path)) {
-//            m__modelPath = modelPath;
-//            m__vertPath = vertPath;
-//        }
-//        else
-//            throw smpl_error("SMPL", "Failed to initialize model path!");
-    }
-
-    void SMPL::setModelPath(const std::string &modelPath) {
-//        std::experimental::filesystem::path path(modelPath);
-//        if (std::experimental::filesystem::exists(path))
-//            m__modelPath = modelPath;
-//        else
-//            throw smpl_error("SMPL", "Failed to initialize model path!");
-    }
-
-    void SMPL::setVertPath(const std::string &vertexPath) {
-        m__vertPath = vertexPath;
+        m__modelPath = modelPath;
+        m__vertPath = vertPath;
     }
 
     void SMPL::init() {
-//        std::experimental::filesystem::path path(m__modelPath);
-//        if (!std::experimental::filesystem::exists(path))
-//            throw smpl_error("SMPL", "Cannot initialize a SMPL model!");
-
         nlohmann::json model; // JSON object represents.
         std::ifstream file(m__modelPath);
         file >> model;

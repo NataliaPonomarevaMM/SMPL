@@ -36,10 +36,6 @@ namespace smpl {
         SMPL(std::string &modelPath, std::string &vertPath);
         ~SMPL();
 
-        // Setter and Getter
-        void setModelPath(const std::string &modelPath);
-        void setVertPath(const std::string &vertexPath);
-
         // Modeling
         // Load model data stored as JSON file into current application.
         void init();
@@ -47,6 +43,8 @@ namespace smpl {
         void run(float *beta, float *theta);
         // Export the deformed mesh to OBJ file.
         void out(int64_t index);
+
+        float *LBS(float *vertex);
     };
 } // namespace smpl
 #endif // SMPL_H
