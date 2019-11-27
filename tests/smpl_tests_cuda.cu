@@ -711,7 +711,7 @@ namespace smpl {
         cudaMemcpy(d_transformations, transformations, JOINT_NUM * 16 * sizeof(float), cudaMemcpyHostToDevice);
         cudaMemcpy(d_restShape, restShape, VERTEX_NUM * 3 * sizeof(float), cudaMemcpyHostToDevice);
 
-        float *result_vertices = skinning(d_restShape, d_transformations);
+        float *result_vertices = skinning(d_transformation, d_weights, d_restShape, VERTEX_NUM);
         cudaFree(d_restShape);
         cudaFree(d_transformations);
 
