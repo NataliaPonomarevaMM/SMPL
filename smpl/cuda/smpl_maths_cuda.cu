@@ -55,35 +55,19 @@ namespace smpl {
         return run(beta, theta, m__weights);
     }
 
-    SMPL::~SMPL() {
-//        ///CPU
-//        if (m__faceIndices != nullptr)
-//            free(m__faceIndices);
-//        if (m__shapeBlendBasis != nullptr)
-//            free(m__shapeBlendBasis);
-//        if (m__poseBlendBasis != nullptr)
-//            free(m__poseBlendBasis);
-//        if (m__templateRestShape != nullptr)
-//            free(m__templateRestShape);
-//        if (m__jointRegressor != nullptr)
-//            free(m__jointRegressor);
-//        if (m__kinematicTree != nullptr)
-//            free(m__kinematicTree);
-//        if (m__weights != nullptr)
-//            free(m__weights);
-//
-//        ///GPU
-//        if (d_poseBlendBasis != nullptr)
-//            cudaFree(d_poseBlendBasis);
-//        if (d_shapeBlendBasis != nullptr)
-//            cudaFree(d_shapeBlendBasis);
-//        if (d_templateRestShape != nullptr)
-//            cudaFree(d_templateRestShape);
-//        if (d_jointRegressor != nullptr)
-//            cudaFree(d_jointRegressor);
-//        if (d_weights != nullptr)
-//            cudaFree(d_weights);
-//        if (d_kinematicTree != nullptr)
-//            cudaFree(d_kinematicTree);
+    void SMPL::freeDeviceMemory() {
+        ///GPU
+        if (d_poseBlendBasis != nullptr)
+            cudaFree(d_poseBlendBasis);
+        if (d_shapeBlendBasis != nullptr)
+            cudaFree(d_shapeBlendBasis);
+        if (d_templateRestShape != nullptr)
+            cudaFree(d_templateRestShape);
+        if (d_jointRegressor != nullptr)
+            cudaFree(d_jointRegressor);
+        if (d_weights != nullptr)
+            cudaFree(d_weights);
+        if (d_kinematicTree != nullptr)
+            cudaFree(d_kinematicTree);
     }
 }

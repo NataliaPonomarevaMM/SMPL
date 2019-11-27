@@ -63,6 +63,24 @@ namespace smpl {
         loadToDevice();
     }
 
+    SMPL::~SMPL() {
+        ///CPU
+        if (m__faceIndices != nullptr)
+            free(m__faceIndices);
+        if (m__shapeBlendBasis != nullptr)
+            free(m__shapeBlendBasis);
+        if (m__poseBlendBasis != nullptr)
+            free(m__poseBlendBasis);
+        if (m__templateRestShape != nullptr)
+            free(m__templateRestShape);
+        if (m__jointRegressor != nullptr)
+            free(m__jointRegressor);
+        if (m__kinematicTree != nullptr)
+            free(m__kinematicTree);
+        if (m__weights != nullptr)
+            free(m__weights);
+    }
+
 //    void SMPL::out(int64_t ind) {
 //        std::ofstream file(m__vertPath);
 //
