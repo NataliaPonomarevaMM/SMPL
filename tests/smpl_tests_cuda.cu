@@ -179,12 +179,12 @@ namespace smpl {
         cudaMalloc((void **) &d_shapeBlendBasis, VERTEX_NUM * 3 * SHAPE_BASIS_DIM * sizeof(float));
         cudaMemcpy(d_shapeBlendBasis, m__shapeBlendBasis, VERTEX_NUM * 3 * SHAPE_BASIS_DIM * sizeof(float), cudaMemcpyHostToDevice);
 
-        //auto [d_poseRotation, d_restPoseRotation, d_poseBlendShape, d_shapeBlendShape] = blendShape(theta, beta);
-        auto bs = blendShape(theta, beta);
-        auto d_poseRotation = std::get<0>(bs);
-        auto d_restPoseRotation = std::get<1>(bs);
-        auto d_poseBlendShape = std::get<2>(bs);
-        auto d_shapeBlendShape = std::get<3>(bs);
+        auto pbs = poseBlendShape(theta);
+        auto d_poseRotation = std::get<0>(pbs);
+        auto d_restPoseRotation = std::get<1>(pbs);
+        auto d_poseBlendShape = std::get<2>(pbs);
+
+        auto d_shapeBlendShape = shapeBlendShape(beta);
 
         float *poseRotation = (float *)malloc(JOINT_NUM * 9 * sizeof(float)),
             *restPoseRotation = (float *)malloc(JOINT_NUM * 9 * sizeof(float)),

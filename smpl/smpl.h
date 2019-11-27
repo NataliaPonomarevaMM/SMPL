@@ -23,7 +23,7 @@ namespace smpl {
 
         void loadToDevice();
 
-        std::tuple<float *, float *, float *, float *> poseBlendShape(float *theta);
+        std::tuple<float *, float *, float *> poseBlendShape(float *theta);
         float *shapeBlendShape(float *beta);
         std::tuple<float *, float *> regressJoints(float *d_shapeBlendShape, float *d_poseBlendShape);
         float *transform(float *d_poseRotation, float *d_joints);

@@ -75,7 +75,7 @@ namespace smpl {
         }
     }
 
-    std::tuple<float *, float *, float *, float *> SMPL::poseBlendShape(float *theta) {
+    std::tuple<float *, float *, float *> SMPL::poseBlendShape(float *theta) {
         float *d_theta, *d_poseRotation, *d_restPoseRotation, *d_poseBlendShape;
         cudaMalloc((void **) &d_theta, JOINT_NUM * 3 * sizeof(float));
         cudaMalloc((void **) &d_poseRotation, JOINT_NUM * 9 * sizeof(float));
