@@ -3,7 +3,6 @@
 #include <nlohmann/json.hpp>
 #include <xtensor/xarray.hpp>
 #include <xtensor/xjson.hpp>
-#include "exception.h"
 #include "smpl.h"
 #include "def.h"
 
