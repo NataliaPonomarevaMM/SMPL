@@ -22,12 +22,13 @@ namespace smpl {
         cudaMemcpy(d_weights, m__weights, VERTEX_NUM * JOINT_NUM * sizeof(float), cudaMemcpyHostToDevice);
     }
 
-    float *SMPL::run(float *beta, float *theta) {
-        auto bs = blendShape(beta, theta);
-        auto d_poseRotation = std::get<0>(bs);
-        auto d_restPoseRotation = std::get<1>(bs);
-        auto d_poseBlendShape = std::get<2>(bs);
-        auto d_shapeBlendShape = std::get<3>(bs);
+    float *SMPL::run(float *beta, float *theta, float *d_custom_weights, float *d_vertices = nullptr, float vertexnum = 0) {
+        auto pbs = poseBlendShape(theta);
+        auto d_poseRotation = std::get<0>(pbs);
+        auto d_restPoseRotation = std::get<1>(pbs);
+        auto d_poseBlendShape = std::get<2>(pbs);
+
+        auto d_shapeBlendShape = shapeBlendShape(beta);
 
         auto rj = regressJoints(d_shapeBlendShape, d_poseBlendShape);
         auto d_restShape = std::get<0>(rj);
@@ -37,11 +38,21 @@ namespace smpl {
         auto d_transformation = transform(d_poseRotation, d_joints);
         cudaFree(d_poseRotation);
         cudaFree(d_joints);
-        float *res = skinning(d_restShape, d_transformation);
+
+        if (d_vertices == nullptr) {
+            d_vertices = d_restShape;
+            vertexnum = VERTEX_NUM
+        }
+
+        float *res = skinning(d_transformation, d_custom_weights, d_vertices, vertexnum);
         cudaFree(d_restShape);
         cudaFree(d_transformation);
 
         return res;
+    }
+
+    float *SMPL::lbs_for_model(float *beta, float *theta) {
+        return run(beta, theta, m__weights);
     }
 
     SMPL::~SMPL() {

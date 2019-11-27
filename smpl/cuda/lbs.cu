@@ -13,7 +13,7 @@ namespace smpl {
             dist[ind] = 0;
             for (int k = 0; k < 3; k++) {
                 float restShape = templateRestShape[j * 3 + k] + shapeBlendShape[j * 3 + k];
-                dist[ind] += (curvertices[i * 3 + k] - restShape) * (curvertices - restShape);
+                dist[ind] += (curvertices[i * 3 + k] - restShape) * (curvertices[i * 3 + k] - restShape);
             }
         }
 
@@ -27,12 +27,12 @@ namespace smpl {
             ind[2] = 2;
             ind[3] = 3;
 
-            for (l = 0; l < 4; l++)
-                for (p = 0; p < 3 - l; p++)
-                    if (dist[ind[j]] > array[ind[j + 1]) {
-                        int tmp = ind[j];
-                        ind[j] = ind[j + 1];
-                        ind[j + 1] = tmp;
+            for (int l = 0; l < 4; l++)
+                for (int p = 0; p < 3 - l; p++)
+                    if (dist[ind[p]] > dist[ind[p + 1]]) {
+                        int tmp = ind[p];
+                        ind[p] = ind[p + 1];
+                        ind[p + 1] = tmp;
                     }
 
             //find first 4 minimum distances
@@ -46,7 +46,7 @@ namespace smpl {
                     }
         }
 
-        __global__ void CalculateWeights(float *dist, float *weights, float *ind, int jointnum, int vertexnum,
+        __global__ void CalculateWeights(float *dist, float *weights, int *ind, int jointnum, int vertexnum,
                                          float *new_weights) {
             int j = threadIdx.x; // num of weight
             //int i = blockIdx.x;
@@ -57,28 +57,15 @@ namespace smpl {
             for (int k = 0; k < 4; k++) {
                 weight += dist[ind[i * 4 + k]];
                 new_weights[i * jointnum + j] += dist[ind[i * 4 + k]] *
-                        weights[ind[i * 4 + k] * jointnum + j]
+                        weights[ind[i * 4 + k] * jointnum + j];
             }
             new_weights[i * jointnum + j] /= weight;
         }
     }
 
     // linear blend skinning for vertex [3]
-    float *SMPL::LBS(float *beta, float *theta, float *vertex) {
-        auto bs = blendShape(beta, theta);
-        auto d_poseRotation = std::get<0>(bs);
-        auto d_restPoseRotation = std::get<1>(bs);
-        auto d_poseBlendShape = std::get<2>(bs);
-        auto d_shapeBlendShape = std::get<3>(bs);
-
-        auto rj = regressJoints(d_shapeBlendShape, d_poseBlendShape);
-        auto d_restShape = std::get<0>(rj);
-        auto d_joints = std::get<1>(rj);
-        cudaFree(d_poseBlendShape);
-
-        auto d_transformation = transform(d_poseRotation, d_joints);
-        cudaFree(d_poseRotation);
-        cudaFree(d_joints);
+    float *SMPL::lbs_for_custom_vertices(float *beta, float *theta, float *vertex) {
+        auto d_shapeBlendShape = shapeBlendShape(beta);
 
         float *d_dist;
         cudaMalloc((void **) &d_dist, VERTEX_NUM * sizeof(float));
@@ -99,15 +86,10 @@ namespace smpl {
         cudaFree(d_dist);
         cudaFree(d_ind);
 
-        ///SKINNING
-        float *d_vertices;
-        cudaMalloc((void **) &d_vertices, 3 * sizeof(float));
+        auto res = run(beta, theta, d_cur_weights, d_vertex, 1);
+        cudaFree(d_cur_weights);
+        cudaFree(d_vertex);
 
-        device::Skinning<<<BATCH_SIZE,VERTEX_NUM>>>(d_vertex, d_transformation, d_cur_weights, 1, 1, JOINT_NUM, d_vertices);
-
-        float *result_vertices = (float *)malloc(3 * sizeof(float));
-        cudaMemcpy(result_vertices, d_vertices, 3 * sizeof(float), cudaMemcpyDeviceToHost);
-        cudaFree(d_vertices);
-        return result_vertices;
+        return res;
     }
 }

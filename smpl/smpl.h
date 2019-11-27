@@ -22,10 +22,14 @@ namespace smpl {
         int64_t *d_kinematicTree;
 
         void loadToDevice();
-        std::tuple<float *, float *, float *, float *> blendShape(float *theta, float *beta);
+
+        std::tuple<float *, float *, float *, float *> poseBlendShape(float *theta);
+        float *shapeBlendShape(float *beta);
         std::tuple<float *, float *> regressJoints(float *d_shapeBlendShape, float *d_poseBlendShape);
         float *transform(float *d_poseRotation, float *d_joints);
         float *skinning(float *d_restShape, float *d_transformation);
+
+        float *run(float *beta, float *theta, float *d_custom_weights, float *d_vertices = nullptr, float vertexnum = 0);
     public:
         // Constructor and Destructor
         SMPL();
@@ -34,8 +38,8 @@ namespace smpl {
         // Load model data stored as JSON file into current application.
         void init();
         // Run the model with a specific group of beta, theta.
-        float *run(float *beta, float *theta);
-        float *LBS(float *beta, float *theta, float *vertex);
+        float *lbs_for_model(float *beta, float *theta);
+        float *lbs_for_custom_vertices(float *beta, float *theta, float *vertex);
     };
 } // namespace smpl
 #endif // SMPL_H

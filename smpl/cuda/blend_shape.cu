@@ -75,7 +75,7 @@ namespace smpl {
         }
     }
 
-    std::tuple<float *, float *, float *, float *> SMPL::blendShape(float *theta, float *beta) {
+    std::tuple<float *, float *, float *, float *> SMPL::poseBlendShape(float *theta) {
         float *d_theta, *d_poseRotation, *d_restPoseRotation, *d_poseBlendShape;
         cudaMalloc((void **) &d_theta, JOINT_NUM * 3 * sizeof(float));
         cudaMalloc((void **) &d_poseRotation, JOINT_NUM * 9 * sizeof(float));
@@ -85,17 +85,19 @@ namespace smpl {
 
         device::PoseBlend1<<<1,JOINT_NUM>>>(d_theta, d_poseRotation, d_restPoseRotation);
         device::PoseBlend2<<<1,VERTEX_NUM>>>(d_poseRotation, d_poseBlendBasis, d_restPoseRotation, d_poseBlendShape);
+        cudaFree(d_theta);
 
+        return {d_poseRotation, d_restPoseRotation, d_poseBlendShape};
+    }
+
+    float *SMPL::shapeBlendShape(float *beta) {
         float *d_beta, *d_shapeBlendShape;
         cudaMalloc((void **) &d_beta, SHAPE_BASIS_DIM * sizeof(float));
         cudaMalloc((void **) &d_shapeBlendShape, VERTEX_NUM * 3 * sizeof(float));
         cudaMemcpy(d_beta, beta, SHAPE_BASIS_DIM * sizeof(float), cudaMemcpyHostToDevice);
 
         device::ShapeBlend<<<1,VERTEX_NUM>>>(d_beta, d_shapeBlendBasis, SHAPE_BASIS_DIM, d_shapeBlendShape);
-
-        cudaFree(d_theta);
         cudaFree(d_beta);
-
-        return {d_poseRotation, d_restPoseRotation, d_poseBlendShape, d_shapeBlendShape};
+        return d_shapeBlendShape;
     }
 }
