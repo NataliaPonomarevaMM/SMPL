@@ -8,7 +8,6 @@
 namespace smpl {
     class SMPL : public ::testing::Test {
     protected:
-        std::string m__modelPath = ""; // Path to the JSON model file.
         /// CPU
         int32_t *m__faceIndices; // Vertex indices of each face, (13776, 3)
         float *m__shapeBlendBasis; // Basis of the shape-dependent shape space, (6890, 3, 10).
@@ -30,12 +29,11 @@ namespace smpl {
     public:
         // Constructor and Destructor
         SMPL();
-        SMPL(std::string &modelPath);
         ~SMPL();
 
         // Load model data stored as JSON file into current application.
         void init();
-        // Run the model with a specific group of beta, theta, and translation.
+        // Run the model with a specific group of beta, theta.
         float *run(float *beta, float *theta);
         float *LBS(float *beta, float *theta, float *vertex);
     };

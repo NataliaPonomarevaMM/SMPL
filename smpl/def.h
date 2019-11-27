@@ -1,10 +1,6 @@
 #ifndef DEF_H
 #define DEF_H
 
-#ifndef BATCH_SIZE
-#define BATCH_SIZE smpl::batch_size
-#endif // BATCH_SIZE
-
 #ifndef VERTEX_NUM
 #define VERTEX_NUM smpl::vertex_num
 #endif // VERTEX_NUM
@@ -28,7 +24,6 @@
 #include <cstdlib>
 
 namespace smpl {
-    extern int64_t batch_size;// 256
     extern int64_t vertex_num;// 6890
     extern const int64_t joint_num;// 24
     extern const int64_t shape_basis_dim;// 10

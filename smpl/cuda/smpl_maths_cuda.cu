@@ -32,8 +32,6 @@ namespace smpl {
         auto rj = regressJoints(d_shapeBlendShape, d_poseBlendShape);
         auto d_restShape = std::get<0>(rj);
         auto d_joints = std::get<1>(rj);
-        //auto [d_poseRotation, d_restPoseRotation, d_poseBlendShape, d_shapeBlendShape] = blendShape(beta, theta);
-        //auto [d_restShape, d_joints] = regressJoints(d_shapeBlendShape, d_poseBlendShape);
         cudaFree(d_shapeBlendShape);
         cudaFree(d_poseBlendShape);
         auto d_transformation = transform(d_poseRotation, d_joints);

@@ -4,9 +4,7 @@
 
 namespace smpl {
     TEST_F(SMPL, BlendShape) {
-        int batchSize = BATCH_SIZE;
         int vertexNum = VERTEX_NUM;
-        BATCH_SIZE = 1;
         VERTEX_NUM = 1;
         
         float theta[72] = {
@@ -188,14 +186,14 @@ namespace smpl {
         auto d_poseBlendShape = std::get<2>(bs);
         auto d_shapeBlendShape = std::get<3>(bs);
 
-        float *poseRotation = (float *)malloc(BATCH_SIZE * JOINT_NUM * 9 * sizeof(float)),
-            *restPoseRotation = (float *)malloc(BATCH_SIZE * JOINT_NUM * 9 * sizeof(float)),
-            *poseBlendShape = (float *)malloc(BATCH_SIZE * VERTEX_NUM * 3 * sizeof(float)),
-            *shapeBlendShape = (float *)malloc(BATCH_SIZE * VERTEX_NUM * 3 * sizeof(float));
-        cudaMemcpy(poseRotation, d_poseRotation, BATCH_SIZE * JOINT_NUM * 9 * sizeof(float), cudaMemcpyDeviceToHost);
-        cudaMemcpy(restPoseRotation, d_restPoseRotation, BATCH_SIZE * JOINT_NUM * 9 * sizeof(float), cudaMemcpyDeviceToHost);
-        cudaMemcpy(poseBlendShape, d_poseBlendShape, BATCH_SIZE * VERTEX_NUM * 3 * sizeof(float), cudaMemcpyDeviceToHost);
-        cudaMemcpy(shapeBlendShape, d_shapeBlendShape, BATCH_SIZE * VERTEX_NUM * 3 * sizeof(float), cudaMemcpyDeviceToHost);
+        float *poseRotation = (float *)malloc(JOINT_NUM * 9 * sizeof(float)),
+            *restPoseRotation = (float *)malloc(JOINT_NUM * 9 * sizeof(float)),
+            *poseBlendShape = (float *)malloc(VERTEX_NUM * 3 * sizeof(float)),
+            *shapeBlendShape = (float *)malloc(VERTEX_NUM * 3 * sizeof(float));
+        cudaMemcpy(poseRotation, d_poseRotation, JOINT_NUM * 9 * sizeof(float), cudaMemcpyDeviceToHost);
+        cudaMemcpy(restPoseRotation, d_restPoseRotation, JOINT_NUM * 9 * sizeof(float), cudaMemcpyDeviceToHost);
+        cudaMemcpy(poseBlendShape, d_poseBlendShape, VERTEX_NUM * 3 * sizeof(float), cudaMemcpyDeviceToHost);
+        cudaMemcpy(shapeBlendShape, d_shapeBlendShape, VERTEX_NUM * 3 * sizeof(float), cudaMemcpyDeviceToHost);
         
         cudaFree(d_poseRotation);
         cudaFree(d_restPoseRotation);
@@ -251,14 +249,11 @@ namespace smpl {
         free(poseRotation);
         free(restPoseRotation);
 
-        BATCH_SIZE = batchSize;
         VERTEX_NUM = vertexNum;
     }
 
     TEST_F(SMPL, JointRegression){
-        int batchSize = BATCH_SIZE;
         int vertexNum = VERTEX_NUM;
-        BATCH_SIZE = 1;
         VERTEX_NUM = 5;
 
         float m__templateRestShape_[15] = {
@@ -316,20 +311,20 @@ namespace smpl {
                         0.91948261, 0.7142413 , 0.99884701
         };// (5, 3)
         float *d_shapeBlendShape, *d_poseBlendShape;
-        cudaMalloc((void **) &d_shapeBlendShape, BATCH_SIZE * VERTEX_NUM * 3 * sizeof(float));
-        cudaMalloc((void **) &d_poseBlendShape, BATCH_SIZE * VERTEX_NUM * 3 * sizeof(float));
-        cudaMemcpy(d_shapeBlendShape, shapeBlendShape, BATCH_SIZE * VERTEX_NUM * 3 * sizeof(float), cudaMemcpyHostToDevice);
-        cudaMemcpy(d_poseBlendShape, poseBlendShape, BATCH_SIZE * VERTEX_NUM * 3 * sizeof(float), cudaMemcpyHostToDevice);
+        cudaMalloc((void **) &d_shapeBlendShape, VERTEX_NUM * 3 * sizeof(float));
+        cudaMalloc((void **) &d_poseBlendShape, VERTEX_NUM * 3 * sizeof(float));
+        cudaMemcpy(d_shapeBlendShape, shapeBlendShape, VERTEX_NUM * 3 * sizeof(float), cudaMemcpyHostToDevice);
+        cudaMemcpy(d_poseBlendShape, poseBlendShape, VERTEX_NUM * 3 * sizeof(float), cudaMemcpyHostToDevice);
 
         //auto [d_restShape, d_joints] = regressJoints(d_shapeBlendShape, d_poseBlendShape);
         auto rj = regressJoints(d_shapeBlendShape, d_poseBlendShape);
         auto d_restShape = std::get<0>(rj);
         auto d_joints = std::get<1>(rj);
 
-        float *joints = (float *)malloc(BATCH_SIZE * JOINT_NUM * 3 * sizeof(float)),
-                *restShape = (float *)malloc(BATCH_SIZE * VERTEX_NUM * 3 * sizeof(float));
-        cudaMemcpy(joints, d_joints, BATCH_SIZE * JOINT_NUM * 3 * sizeof(float), cudaMemcpyDeviceToHost);
-        cudaMemcpy(restShape, d_restShape, BATCH_SIZE * VERTEX_NUM * 3 * sizeof(float), cudaMemcpyDeviceToHost);
+        float *joints = (float *)malloc(JOINT_NUM * 3 * sizeof(float)),
+                *restShape = (float *)malloc(VERTEX_NUM * 3 * sizeof(float));
+        cudaMemcpy(joints, d_joints, JOINT_NUM * 3 * sizeof(float), cudaMemcpyDeviceToHost);
+        cudaMemcpy(restShape, d_restShape, VERTEX_NUM * 3 * sizeof(float), cudaMemcpyDeviceToHost);
         
         cudaFree(d_shapeBlendShape);
         cudaFree(d_poseBlendShape);
@@ -380,14 +375,10 @@ namespace smpl {
         free(joints);
         free(restShape);
 
-        BATCH_SIZE = batchSize;
         VERTEX_NUM = vertexNum;
     }
 
     TEST_F(SMPL, WorldTransformation) {
-        int batchSize = BATCH_SIZE;
-        BATCH_SIZE = 1;
-
         int64_t m__kinematicTree_[48] = {
                 4294967295, 0, 0, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 9, 9, 12, 13, 14, 16, 17, 18, 19, 20, 21,
                 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23
@@ -520,14 +511,14 @@ namespace smpl {
         cudaMemcpy(d_kinematicTree, m__kinematicTree, 2 * JOINT_NUM * sizeof(int64_t), cudaMemcpyHostToDevice);
 
         float *d_joints, *d_poseRotation;
-        cudaMalloc((void **) &d_joints, BATCH_SIZE * JOINT_NUM * 3 * sizeof(float));
-        cudaMalloc((void **) &d_poseRotation, BATCH_SIZE * JOINT_NUM * 9 * sizeof(float));
-        cudaMemcpy(d_joints, joints, BATCH_SIZE * JOINT_NUM * 3 * sizeof(float), cudaMemcpyHostToDevice);
-        cudaMemcpy(d_poseRotation, poseRotation, BATCH_SIZE * JOINT_NUM * 9 * sizeof(float), cudaMemcpyHostToDevice);
+        cudaMalloc((void **) &d_joints, JOINT_NUM * 3 * sizeof(float));
+        cudaMalloc((void **) &d_poseRotation, JOINT_NUM * 9 * sizeof(float));
+        cudaMemcpy(d_joints, joints, JOINT_NUM * 3 * sizeof(float), cudaMemcpyHostToDevice);
+        cudaMemcpy(d_poseRotation, poseRotation, JOINT_NUM * 9 * sizeof(float), cudaMemcpyHostToDevice);
 
         auto d_transformation = transform(d_poseRotation, d_joints);
-        float *transformation = (float *)malloc(BATCH_SIZE * JOINT_NUM * 16 * sizeof(float));
-        cudaMemcpy(transformation, d_transformation, BATCH_SIZE * JOINT_NUM * 16 * sizeof(float), cudaMemcpyDeviceToHost);
+        float *transformation = (float *)malloc(JOINT_NUM * 16 * sizeof(float));
+        cudaMemcpy(transformation, d_transformation, JOINT_NUM * 16 * sizeof(float), cudaMemcpyDeviceToHost);
 
         cudaFree(d_joints);
         cudaFree(d_poseRotation);
@@ -573,13 +564,10 @@ namespace smpl {
                     EXPECT_NEAR(r_transformations[i][j][k], transformation[i * 16 + j * 4 + k], 0.000001);
 
         free(transformation);
-        BATCH_SIZE = batchSize;
     }
 
     TEST_F(SMPL, LinearSkinnig) {
-        int batchSize = BATCH_SIZE;
         int vertexNum = VERTEX_NUM;
-        BATCH_SIZE = 1;
         VERTEX_NUM = 1;
 
         float m__weights_[24] = {
@@ -718,10 +706,10 @@ namespace smpl {
         };// (24, 4, 4)
 
         float *d_restShape, *d_transformations;
-        cudaMalloc((void **) &d_transformations, BATCH_SIZE * JOINT_NUM * 16 * sizeof(float));
-        cudaMalloc((void **) &d_restShape, BATCH_SIZE * VERTEX_NUM * 3 * sizeof(float));
-        cudaMemcpy(d_transformations, transformations, BATCH_SIZE * JOINT_NUM * 16 * sizeof(float), cudaMemcpyHostToDevice);
-        cudaMemcpy(d_restShape, restShape, BATCH_SIZE * VERTEX_NUM * 3 * sizeof(float), cudaMemcpyHostToDevice);
+        cudaMalloc((void **) &d_transformations, JOINT_NUM * 16 * sizeof(float));
+        cudaMalloc((void **) &d_restShape, VERTEX_NUM * 3 * sizeof(float));
+        cudaMemcpy(d_transformations, transformations, JOINT_NUM * 16 * sizeof(float), cudaMemcpyHostToDevice);
+        cudaMemcpy(d_restShape, restShape, VERTEX_NUM * 3 * sizeof(float), cudaMemcpyHostToDevice);
 
         float *result_vertices = skinning(d_restShape, d_transformations);
         cudaFree(d_restShape);
@@ -733,7 +721,6 @@ namespace smpl {
             EXPECT_NEAR(r_vertices[i], result_vertices[i], 0.000001);
 
         free(result_vertices);
-        BATCH_SIZE = batchSize;
         VERTEX_NUM = vertexNum;
     }
 } // namespace smpl

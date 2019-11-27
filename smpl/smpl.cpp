@@ -9,8 +9,6 @@
 
 namespace smpl {
     SMPL::SMPL() :
-            m__modelPath(""),
-            m__vertPath(""),
             m__faceIndices(nullptr),
             m__shapeBlendBasis(nullptr),
             m__poseBlendBasis(nullptr),
@@ -18,7 +16,6 @@ namespace smpl {
             m__jointRegressor(nullptr),
             m__kinematicTree(nullptr),
             m__weights(nullptr),
-            m__result_vertices(nullptr),
             d_poseBlendBasis(nullptr),
             d_shapeBlendBasis(nullptr),
             d_templateRestShape(nullptr),
@@ -28,14 +25,9 @@ namespace smpl {
     {
     }
 
-    SMPL::SMPL(std::string &modelPath, std::string &vertPath) {
-        m__modelPath = modelPath;
-        m__vertPath = vertPath;
-    }
-
-    void SMPL::init() {
+    void SMPL::init(std::string &modelPath) {
         nlohmann::json model; // JSON object represents.
-        std::ifstream file(m__modelPath);
+        std::ifstream file(modelPath);
         file >> model;
 
         // face indices
@@ -72,19 +64,15 @@ namespace smpl {
         loadToDevice();
     }
 
-/**out
- *      @index: - size_t -
- *          A mesh in the batch to be exported.
- */
-    void SMPL::out(int64_t ind) {
-        std::ofstream file(m__vertPath);
-
-        for (int64_t i = 0; i < VERTEX_NUM; i++)
-            file << 'v' << ' ' << m__result_vertices[ind * VERTEX_NUM * 3 + i * 3] << ' '
-                               << m__result_vertices[ind * VERTEX_NUM * 3 + i * 3 + 1] << ' '
-                               << m__result_vertices[ind * VERTEX_NUM * 3 + i * 3 + 2] << '\n';
-
-        for (int64_t i = 0; i < FACE_INDEX_NUM; i++)
-            file << 'f' << ' ' << m__faceIndices[i * 3] << ' ' << m__faceIndices[i * 3 + 1] << ' ' << m__faceIndices[i * 3 + 2] << '\n';
-    }
+//    void SMPL::out(int64_t ind) {
+//        std::ofstream file(m__vertPath);
+//
+//        for (int64_t i = 0; i < VERTEX_NUM; i++)
+//            file << 'v' << ' ' << m__result_vertices[ind * VERTEX_NUM * 3 + i * 3] << ' '
+//                               << m__result_vertices[ind * VERTEX_NUM * 3 + i * 3 + 1] << ' '
+//                               << m__result_vertices[ind * VERTEX_NUM * 3 + i * 3 + 2] << '\n';
+//
+//        for (int64_t i = 0; i < FACE_INDEX_NUM; i++)
+//            file << 'f' << ' ' << m__faceIndices[i * 3] << ' ' << m__faceIndices[i * 3 + 1] << ' ' << m__faceIndices[i * 3 + 2] << '\n';
+//    }
 } // namespace smpl
