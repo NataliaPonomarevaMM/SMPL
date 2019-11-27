@@ -6,7 +6,6 @@ namespace smpl {
     namespace device {
         __global__ void PoseBlend1(float *theta,
                                    float *poseRotation, float *restPoseRotation) {
-            int i = 0;
             int j = threadIdx.x;
 
             int ind = j * 3;
@@ -92,7 +91,7 @@ namespace smpl {
         cudaMalloc((void **) &d_shapeBlendShape, VERTEX_NUM * 3 * sizeof(float));
         cudaMemcpy(d_beta, beta, SHAPE_BASIS_DIM * sizeof(float), cudaMemcpyHostToDevice);
 
-        device::ShapeBlend<<<BATCH_SIZE,VERTEX_NUM>>>(d_beta, d_shapeBlendBasis, SHAPE_BASIS_DIM, d_shapeBlendShape);
+        device::ShapeBlend<<<1,VERTEX_NUM>>>(d_beta, d_shapeBlendBasis, SHAPE_BASIS_DIM, d_shapeBlendShape);
 
         cudaFree(d_theta);
         cudaFree(d_beta);
