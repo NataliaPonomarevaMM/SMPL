@@ -17,9 +17,8 @@ namespace smpl {
                 0.89569129, 0.39256879, 0.8783725 , 0.69078478, 0.98734876,
                 0.75928245, 0.36454463, 0.50106317, 0.37638916, 0.36491184
         };// (3, 10)
-        m__shapeBlendBasis = m__shapeBlendBasis_;
         cudaMalloc((void **) &d_shapeBlendBasis, VERTEX_NUM * 3 * SHAPE_BASIS_DIM * sizeof(float));
-        cudaMemcpy(d_shapeBlendBasis, m__shapeBlendBasis, VERTEX_NUM * 3 * SHAPE_BASIS_DIM * sizeof(float), cudaMemcpyHostToDevice);
+        cudaMemcpy(d_shapeBlendBasis, m__shapeBlendBasis_, VERTEX_NUM * 3 * SHAPE_BASIS_DIM * sizeof(float), cudaMemcpyHostToDevice);
 
         auto d_shapeBlendShape = shapeBlendShape(beta);
 
@@ -195,9 +194,8 @@ namespace smpl {
                                 0.02919023, 0.53491685, 0.40424362, 0.52418386, 0.36509988,
                                 0.19056691, 0.0191229 , 0.51814981, 0.84277686, 0.37321596,
                                 0.22286382, 0.080532};// (3, 207)
-        m__poseBlendBasis = m__poseBlendBasis_;
         cudaMalloc((void **) &d_poseBlendBasis, VERTEX_NUM * 3 * POSE_BASIS_DIM * sizeof(float));
-        cudaMemcpy(d_poseBlendBasis, m__poseBlendBasis, VERTEX_NUM * 3 * POSE_BASIS_DIM * sizeof(float), cudaMemcpyHostToDevice);
+        cudaMemcpy(d_poseBlendBasis, m__poseBlendBasis_, VERTEX_NUM * 3 * POSE_BASIS_DIM * sizeof(float), cudaMemcpyHostToDevice);
         auto pbs = poseBlendShape(theta);
         auto d_poseRotation = std::get<0>(pbs);
         auto d_restPoseRotation = std::get<1>(pbs);
@@ -275,7 +273,6 @@ namespace smpl {
                 0.38344152, 0.79172504, 0.52889492,
                 0.56804456, 0.92559664, 0.07103606
         };// (5, 3)
-        m__templateRestShape = m__templateRestShape_;
         float m__jointRegressor_[120] = {
                 0.0871293 , 0.0202184 , 0.83261985, 0.77815675, 0.87001215,
                 0.97861834, 0.79915856, 0.46147936, 0.78052918, 0.11827443,
@@ -302,11 +299,10 @@ namespace smpl {
                 0.60639321, 0.0191932 , 0.30157482, 0.66017354, 0.29007761,
                 0.61801543, 0.4287687 , 0.13547406, 0.29828233, 0.56996491
         };// (24, 5)
-        m__jointRegressor = m__jointRegressor_;
         cudaMalloc((void **) &d_templateRestShape, VERTEX_NUM * 3 * sizeof(float));
         cudaMalloc((void **) &d_jointRegressor, JOINT_NUM * VERTEX_NUM * sizeof(float));
-        cudaMemcpy(d_templateRestShape, m__templateRestShape, VERTEX_NUM * 3  * sizeof(float), cudaMemcpyHostToDevice);
-        cudaMemcpy(d_jointRegressor, m__jointRegressor, JOINT_NUM * VERTEX_NUM * sizeof(float), cudaMemcpyHostToDevice);
+        cudaMemcpy(d_templateRestShape, m__templateRestShape_, VERTEX_NUM * 3  * sizeof(float), cudaMemcpyHostToDevice);
+        cudaMemcpy(d_jointRegressor, m__jointRegressor_, JOINT_NUM * VERTEX_NUM * sizeof(float), cudaMemcpyHostToDevice);
 
         float shapeBlendShape[15] = {
                         0.1494483 , 0.86812606, 0.16249293,
@@ -395,7 +391,6 @@ namespace smpl {
                 4294967295, 0, 0, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 9, 9, 12, 13, 14, 16, 17, 18, 19, 20, 21,
                 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23
         };// (2, 24)
-        m__kinematicTree = m__kinematicTree_;
         float joints[72] = {
                         0.5488135 , 0.71518937, 0.60276338,
                         0.54488318, 0.4236548 , 0.64589411,
@@ -520,7 +515,7 @@ namespace smpl {
                                 0.1370678 , 0.95815594, 0.46243331
         };// (24, 3, 3)
         cudaMalloc((void **) &d_kinematicTree, 2 * JOINT_NUM * sizeof(int64_t));
-        cudaMemcpy(d_kinematicTree, m__kinematicTree, 2 * JOINT_NUM * sizeof(int64_t), cudaMemcpyHostToDevice);
+        cudaMemcpy(d_kinematicTree, m__kinematicTree_, 2 * JOINT_NUM * sizeof(int64_t), cudaMemcpyHostToDevice);
 
         float *d_joints, *d_poseRotation;
         cudaMalloc((void **) &d_joints, JOINT_NUM * 3 * sizeof(float));
@@ -590,9 +585,8 @@ namespace smpl {
                         0.0202184 , 0.83261985, 0.77815675, 0.87001215,
                         0.97861834, 0.79915856, 0.46147936, 0.78052918
                 };// (24)
-        m__weights = m__weights_;
         cudaMalloc((void **) &d_weights, VERTEX_NUM * JOINT_NUM * sizeof(float));
-        cudaMemcpy(d_weights, m__weights, VERTEX_NUM * JOINT_NUM * sizeof(float), cudaMemcpyHostToDevice);
+        cudaMemcpy(d_weights, m__weights_, VERTEX_NUM * JOINT_NUM * sizeof(float), cudaMemcpyHostToDevice);
 
         float restShape[3] = {0.11827443, 0.63992102, 0.14335329};// (3)
         float transformations[384] = {
