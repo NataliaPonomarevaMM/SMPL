@@ -86,7 +86,7 @@ namespace smpl {
 
         auto res = run(beta, theta, d_cur_weights, d_vertices, 1);
         cudaFree(d_cur_weights);
-        cudaFree(d_vertex);
+        cudaFree(d_vertices);
 
         return res;
     }
