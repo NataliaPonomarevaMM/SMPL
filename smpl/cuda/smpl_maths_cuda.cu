@@ -22,7 +22,7 @@ namespace smpl {
         cudaMemcpy(d_weights, m__weights, VERTEX_NUM * JOINT_NUM * sizeof(float), cudaMemcpyHostToDevice);
     }
 
-    float *SMPL::run(float *beta, float *theta, float *d_custom_weights, float *d_vertices = nullptr, float vertexnum = 0) {
+    float *SMPL::run(float *beta, float *theta, float *d_custom_weights, float *d_vertices, float vertexnum) {
         auto pbs = poseBlendShape(theta);
         auto d_poseRotation = std::get<0>(pbs);
         auto d_restPoseRotation = std::get<1>(pbs);
@@ -41,7 +41,7 @@ namespace smpl {
 
         if (d_vertices == nullptr) {
             d_vertices = d_restShape;
-            vertexnum = VERTEX_NUM
+            vertexnum = VERTEX_NUM;
         }
 
         float *res = skinning(d_transformation, d_custom_weights, d_vertices, vertexnum);
