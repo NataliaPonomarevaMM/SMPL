@@ -36,7 +36,7 @@ namespace smpl {
         ~SMPL();
 
         // Load model data stored as JSON file into current application.
-        void init();
+        void init(std::string &modelPath);
         // Run the model with a specific group of beta, theta.
         float *lbs_for_model(float *beta, float *theta);
         float *lbs_for_custom_vertices(float *beta, float *theta, float *vertex);
