@@ -69,8 +69,8 @@ namespace smpl {
 
         float *d_dist;
         cudaMalloc((void **) &d_dist, VERTEX_NUM * sizeof(float));
-        float *d_ind;
-        cudaMalloc((void **) &d_ind, 4 * sizeof(float));
+        int *d_ind;
+        cudaMalloc((void **) &d_ind, 4 * sizeof(int));
         float *d_vertex;
         cudaMalloc((void **) &d_vertex, 3 * sizeof(float));
         cudaMemcpy(d_vertex, vertex, 3 * sizeof(float), cudaMemcpyHostToDevice);
