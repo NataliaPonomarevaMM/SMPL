@@ -54,13 +54,14 @@ namespace smpl {
         __global__ void
         PoseBlend2(float *poseRotation, float *poseBlendBasis, float *restPoseRotation,
                    float *poseBlendShape) {
-            int j = threadIdx.x; // vertex num
-            for (int k = 0; k < 3; k++) {
-                poseBlendShape[j * 3 + k] = 0;
-                for (int l = 0; l < 207; l++)
-                    poseBlendShape[j * 3 + k] += (poseRotation[l + 9] - restPoseRotation[l + 9]) *
-                            poseBlendBasis[j * 3 * 207 + k * 207 + l];
-            }
+            int j = blockIdx.x;
+            int k = threadIdx.x;
+
+            int ind = j * 3 + k;
+            poseBlendShape[ind] = 0;
+            for (int l = 0; l < 207; l++)
+                poseBlendShape[ind] += (poseRotation[l + 9] - restPoseRotation[l + 9]) *
+                        poseBlendBasis[ind * 207 + l];
         }
 
         __global__ void ShapeBlend(float *beta, float *shapeBlendBasis, int shapebasisdim,
@@ -84,7 +85,7 @@ namespace smpl {
         cudaMemcpy(d_theta, theta, JOINT_NUM * 3 * sizeof(float), cudaMemcpyHostToDevice);
 
         device::PoseBlend1<<<1,JOINT_NUM>>>(d_theta, d_poseRotation, d_restPoseRotation);
-        device::PoseBlend2<<<1,VERTEX_NUM>>>(d_poseRotation, d_poseBlendBasis, d_restPoseRotation, d_poseBlendShape);
+        device::PoseBlend2<<<VERTEX_NUM,3>>>(d_poseRotation, d_poseBlendBasis, d_restPoseRotation, d_poseBlendShape);
         cudaFree(d_theta);
 
         return {d_poseRotation, d_restPoseRotation, d_poseBlendShape};

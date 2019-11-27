@@ -6,8 +6,7 @@ namespace smpl {
     namespace device {
         __global__ void FindKNN1(float *templateRestShape, float *shapeBlendShape, int vertexnum, float *curvertices,
                                  float *dist) {
-            //int i = blockIdx.x;
-            int i = 0;
+            int i = blockIdx.x;
             int j = threadIdx.x;
             int ind = i * vertexnum + j;
             dist[ind] = 0;
@@ -19,17 +18,17 @@ namespace smpl {
 
         __global__ void FindKNN2(float *dist, int vertexnum,
                                  int *ind) {
-            //int i = threadIdx.x;
+            int i = threadIdx.x;
 
             //sort them
-            ind[0] = 0;
-            ind[1] = 1;
-            ind[2] = 2;
-            ind[3] = 3;
+            ind[i * 4 + 0] = 0;
+            ind[i * 4 + 1] = 1;
+            ind[i * 4 + 2] = 2;
+            ind[i * 4 + 3] = 3;
 
             for (int l = 0; l < 4; l++)
                 for (int p = 0; p < 3 - l; p++)
-                    if (dist[ind[p]] > dist[ind[p + 1]]) {
+                    if (dist[i * vertexnum + ind[i * 4 + p]] > dist[i * vertexnum + ind[i * 4 + p + 1]]) {
                         int tmp = ind[p];
                         ind[p] = ind[p + 1];
                         ind[p + 1] = tmp;
@@ -38,10 +37,10 @@ namespace smpl {
             //find first 4 minimum distances
             for (int k = 4; k < vertexnum; k++)
                 for (int t = 0; t < 4; t++)
-                    if (dist[k] < dist[ind[t]]) {
+                    if (dist[i * vertexnum + k] < dist[i * vertexnum + ind[i * 4 + t]]) {
                         for (int l = 3; l > t; l--)
-                            ind[l] = ind[l - 1];
-                        ind[t] = k;
+                            ind[i * 4 + l] = ind[i * 4 + l - 1];
+                        ind[i * 4 + t] = k;
                         continue;
                     }
         }
@@ -49,39 +48,38 @@ namespace smpl {
         __global__ void CalculateWeights(float *dist, float *weights, int *ind, int jointnum, int vertexnum,
                                          float *new_weights) {
             int j = threadIdx.x; // num of weight
-            //int i = blockIdx.x;
-            int i = 0; // num of vertex
+            int i = blockIdx.x; // num of vertex
 
             new_weights[i * jointnum + j] = 0;
             float weight = 0;
             for (int k = 0; k < 4; k++) {
-                weight += dist[ind[i * 4 + k]];
-                new_weights[i * jointnum + j] += dist[ind[i * 4 + k]] *
+                weight += dist[i * vertexnum + ind[i * 4 + k]];
+                new_weights[i * jointnum + j] += dist[i * vertexnum + ind[i * 4 + k]] *
                         weights[ind[i * 4 + k] * jointnum + j];
             }
             new_weights[i * jointnum + j] /= weight;
         }
     }
 
-    // linear blend skinning for vertex [3]
-    float *SMPL::lbs_for_custom_vertices(float *beta, float *theta, float *vertex) {
+    // linear blend skinning for vertex [vertnum][3]
+    float *SMPL::lbs_for_custom_vertices(float *beta, float *theta, float *vertices, int vertnum) {
         auto d_shapeBlendShape = shapeBlendShape(beta);
 
         float *d_dist;
-        cudaMalloc((void **) &d_dist, VERTEX_NUM * sizeof(float));
+        cudaMalloc((void **) &d_dist, vertnum * VERTEX_NUM * sizeof(float));
         int *d_ind;
-        cudaMalloc((void **) &d_ind, 4 * sizeof(int));
-        float *d_vertex;
-        cudaMalloc((void **) &d_vertex, 3 * sizeof(float));
-        cudaMemcpy(d_vertex, vertex, 3 * sizeof(float), cudaMemcpyHostToDevice);
+        cudaMalloc((void **) &d_ind, vertnum * 4 * sizeof(int));
+        float *d_vertices;
+        cudaMalloc((void **) &d_vertices, vertnum * 3 * sizeof(float));
+        cudaMemcpy(d_vertices, vertices, vertnum * 3 * sizeof(float), cudaMemcpyHostToDevice);
         float *d_cur_weights;
-        cudaMalloc((void **) &d_cur_weights, JOINT_NUM * sizeof(float));
+        cudaMalloc((void **) &d_cur_weights, vertnum * JOINT_NUM * sizeof(float));
 
         // find k nearest neigbours
-        device::FindKNN1<<<1,VERTEX_NUM>>>(d_templateRestShape, d_shapeBlendShape, VERTEX_NUM, d_vertex, d_dist);
-        device::FindKNN2<<<1,1>>>(d_dist, VERTEX_NUM, d_ind);
+        device::FindKNN1<<<vertnum,VERTEX_NUM>>>(d_templateRestShape, d_shapeBlendShape, VERTEX_NUM, d_vertices, d_dist);
+        device::FindKNN2<<<1,vertnum>>>(d_dist, VERTEX_NUM, d_ind);
         //now we can calculate weights
-        device::CalculateWeights<<<1,JOINT_NUM>>>(d_dist, m__weights, d_ind,  JOINT_NUM, VERTEX_NUM, d_cur_weights);
+        device::CalculateWeights<<<vertnum,JOINT_NUM>>>(d_dist, m__weights, d_ind,  JOINT_NUM, VERTEX_NUM, d_cur_weights);
         cudaFree(d_shapeBlendShape);
         cudaFree(d_dist);
         cudaFree(d_ind);
