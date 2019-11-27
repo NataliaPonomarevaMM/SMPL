@@ -25,25 +25,23 @@ namespace smpl {
 
 
         __global__ void
-        GlobalTransform(float *localTransformations, int64_t *kinematicTree, int jointnum, int batchsize,
+        GlobalTransform(float *localTransformations, int64_t *kinematicTree, int jointnum,
                         float *globalTransformations) {
             //global transformations [N][24][4][4]
-            for (int i = 0; i < batchsize; i++)
-                for (int k = 0; k < 4; k++)
-                    for (int l = 0; l < 4; l++)
-                        globalTransformations[i * jointnum * 16 + k * 4 + l] = localTransformations[i * jointnum * 16 +
-                                                                                                    k * 4 + l];
+            for (int k = 0; k < 4; k++)
+                for (int l = 0; l < 4; l++)
+                    globalTransformations[k * 4 + l] = localTransformations[k * 4 + l];
+
             for (int j = 1; j < jointnum; j++) {
                 int anc = kinematicTree[j];
-                for (int i = 0; i < batchsize; i++)
-                    for (int k = 0; k < 4; k++)
-                        for (int l = 0; l < 4; l++) {
-                            globalTransformations[i * jointnum * 16 + j * 16 + k * 4 + l] = 0;
-                            for (int t = 0; t < 4; t++)
-                                globalTransformations[i * jointnum * 16 + j * 16 + k * 4 + l] +=
-                                        globalTransformations[i * jointnum * 16 + anc * 16 + k * 4 + t] *
-                                        localTransformations[i * jointnum * 16 + j * 16 + t * 4 + l];
-                        }
+                for (int k = 0; k < 4; k++)
+                    for (int l = 0; l < 4; l++) {
+                        globalTransformations[j * 16 + k * 4 + l] = 0;
+                        for (int t = 0; t < 4; t++)
+                            globalTransformations[j * 16 + k * 4 + l] +=
+                                    globalTransformations[anc * 16 + k * 4 + t] *
+                                    localTransformations[j * 16 + t * 4 + l];
+                    }
             }
         }
 
@@ -66,8 +64,8 @@ namespace smpl {
         cudaMalloc((void **) &d_localTransformations, JOINT_NUM * 16 * sizeof(float));
         cudaMalloc((void **) &d_globalTransformations, JOINT_NUM * 16 * sizeof(float));
 
-        device::LocalTransform<<<1,JOINT_NUM>>>(d_joints, d_kinematicTree, d_poseRotation, JOINT_NUM, d_localTransformations);
-        device::GlobalTransform<<<1,1>>>(d_localTransformations, d_kinematicTree, JOINT_NUM, BATCH_SIZE, d_globalTransformations);
+        device::LocalTransform<<<1,JOINT_NUM>>>(d_joints, d_kinematicTree, d_poseRotation, d_localTransformations);
+        device::GlobalTransform<<<1,1>>>(d_localTransformations, d_kinematicTree, JOINT_NUM, d_globalTransformations);
         device::Transform<<<1,JOINT_NUM>>>(d_globalTransformations, d_joints, JOINT_NUM);
 
         cudaFree(d_localTransformations);
