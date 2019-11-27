@@ -26,8 +26,8 @@ find_package(nlohmann_json REQUIRED)
 find_package(GTest REQUIRED)
 
 
-file(GLOB HEADER "*.h")
-file(GLOB SOURCE "*.cpp" "*.cu")
+file(GLOB HEADER "smpl/*.h")
+file(GLOB SOURCE "*.cpp" "smpl/*.cpp" "tests/*.cpp" "smpl/cuda/*.cu" "tests/*.cu")
 
 set(PROJECT_INCLUDE_DIRS
         ${DOUBLE_FUSION_INCLUDE_DIRS}
