@@ -22,7 +22,7 @@ namespace smpl {
             for (int t = 0; t < 3; t++)
                 homoW += coeffs[12 + t] * restShape[j * 3 + t];
             for (int k = 0; k < 3; k++) {
-                vertices[i * vertexnum * 3 + j * 3 + k] = coeffs[k * 4 + 3];
+                vertices[j * 3 + k] = coeffs[k * 4 + 3];
                 for (int t = 0; t < 3; t++)
                     vertices[j * 3 + k] += coeffs[k * 4 + t] * restShape[j * 3 + t];
                 vertices[j * 3 + k] /= homoW;

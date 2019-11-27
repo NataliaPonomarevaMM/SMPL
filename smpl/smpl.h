@@ -27,7 +27,7 @@ namespace smpl {
         float *shapeBlendShape(float *beta);
         std::tuple<float *, float *> regressJoints(float *d_shapeBlendShape, float *d_poseBlendShape);
         float *transform(float *d_poseRotation, float *d_joints);
-        float *skinning(float *d_restShape, float *d_transformation);
+        float *skinning(float *d_transformation, float *d_custom_weights, float *d_vertices, float vertexnum);
 
         float *run(float *beta, float *theta, float *d_custom_weights, float *d_vertices = nullptr, float vertexnum = 0);
     public:
