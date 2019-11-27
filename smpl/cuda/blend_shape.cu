@@ -65,13 +65,13 @@ namespace smpl {
 
         __global__ void ShapeBlend(float *beta, float *shapeBlendBasis, int shapebasisdim,
                                    float *shapeBlendShape) {
-            int j = threadIdx.x;
-            for (int k = 0; k < 3; k++) {
-                shapeBlendShape[j * 3 + k] = 0;
-                for (int l = 0; l < shapebasisdim; l++)
-                    shapeBlendShape[j * 3 + k] += beta[l] * shapeBlendBasis[j * shapebasisdim * 3 +
-                                                                            k * shapebasisdim + l];// (6890, 3)
-            }
+            int j = blockIdx.x;
+            int k = threadIdx.x;
+
+            int ind = j * 3 + k;
+            shapeBlendShape[ind] = 0;
+            for (int l = 0; l < shapebasisdim; l++)
+                shapeBlendShape[ind] += beta[l] * shapeBlendBasis[ind * shapebasisdim + l];// (6890, 3)
         }
     }
 
@@ -96,7 +96,7 @@ namespace smpl {
         cudaMalloc((void **) &d_shapeBlendShape, VERTEX_NUM * 3 * sizeof(float));
         cudaMemcpy(d_beta, beta, SHAPE_BASIS_DIM * sizeof(float), cudaMemcpyHostToDevice);
 
-        device::ShapeBlend<<<1,VERTEX_NUM>>>(d_beta, d_shapeBlendBasis, SHAPE_BASIS_DIM, d_shapeBlendShape);
+        device::ShapeBlend<<<VERTEX_NUM,3>>>(d_beta, d_shapeBlendBasis, SHAPE_BASIS_DIM, d_shapeBlendShape);
         cudaFree(d_beta);
         return d_shapeBlendShape;
     }
