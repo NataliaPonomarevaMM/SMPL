@@ -3,7 +3,40 @@
 #include "../smpl/smpl.h"
 
 namespace smpl {
-    TEST_F(SMPL, BlendShape) {
+    TEST_F(SMPL, shapeBlendShape) {
+        int vertexNum = VERTEX_NUM;
+        VERTEX_NUM = 1;
+
+        float beta[10] = {0.5488135, 0.71518937, 0.60276338, 0.54488318, 0.4236548,
+                          0.64589411, 0.43758721, 0.891773, 0.96366276, 0.38344152};// (10)
+        float m__shapeBlendBasis_[30] = {
+                0.08531092, 0.22139645, 0.10001406, 0.2650397 , 0.06614946,
+                0.06560487, 0.85627618, 0.16212026, 0.55968241, 0.77345554,
+                0.45640957, 0.15336888, 0.19959614, 0.43298421, 0.52823409,
+                0.34944029, 0.7814796 , 0.75102165, 0.92721181, 0.02895255,
+                0.89569129, 0.39256879, 0.8783725 , 0.69078478, 0.98734876,
+                0.75928245, 0.36454463, 0.50106317, 0.37638916, 0.36491184
+        };// (3, 10)
+        m__shapeBlendBasis = m__shapeBlendBasis_;
+        cudaMalloc((void **) &d_shapeBlendBasis, VERTEX_NUM * 3 * SHAPE_BASIS_DIM * sizeof(float));
+        cudaMemcpy(d_shapeBlendBasis, m__shapeBlendBasis, VERTEX_NUM * 3 * SHAPE_BASIS_DIM * sizeof(float), cudaMemcpyHostToDevice);
+
+        auto d_shapeBlendShape = shapeBlendShape(beta);
+
+        float *shapeBlendShape = (float *)malloc(VERTEX_NUM * 3 * sizeof(float));
+        cudaMemcpy(shapeBlendShape, d_shapeBlendShape, VERTEX_NUM * 3 * sizeof(float), cudaMemcpyDeviceToHost);
+        cudaFree(d_shapeBlendShape);
+
+        float r_shapeBlendShape[3] = {1.835449, 3.082224, 3.695877};
+
+        for (int i = 0; i < 3; i++)
+        EXPECT_NEAR(r_shapeBlendShape[i], shapeBlendShape[i], 0.000001);
+
+        free(shapeBlendShape);
+        VERTEX_NUM = vertexNum;
+    }
+
+    TEST_F(SMPL, poseBlendShape) {
         int vertexNum = VERTEX_NUM;
         VERTEX_NUM = 1;
         
@@ -33,8 +66,6 @@ namespace smpl {
                         0.28280696, 0.12019656, 0.2961402 ,
                         0.11872772, 0.31798318, 0.41426299
                 };// (24, 3)
-        float beta[10] = {0.5488135, 0.71518937, 0.60276338, 0.54488318, 0.4236548,
-                                  0.64589411, 0.43758721, 0.891773, 0.96366276, 0.38344152};// (10)
         float m__poseBlendBasis_[621] = {
                                 0.0641475 , 0.69247212, 0.56660145, 0.26538949, 0.52324805,
                                 0.09394051, 0.5759465 , 0.9292962 , 0.31856895, 0.66741038,
@@ -165,42 +196,24 @@ namespace smpl {
                                 0.19056691, 0.0191229 , 0.51814981, 0.84277686, 0.37321596,
                                 0.22286382, 0.080532};// (3, 207)
         m__poseBlendBasis = m__poseBlendBasis_;
-        float m__shapeBlendBasis_[30] = {
-                        0.08531092, 0.22139645, 0.10001406, 0.2650397 , 0.06614946,
-                                0.06560487, 0.85627618, 0.16212026, 0.55968241, 0.77345554,
-                        0.45640957, 0.15336888, 0.19959614, 0.43298421, 0.52823409,
-                                0.34944029, 0.7814796 , 0.75102165, 0.92721181, 0.02895255,
-                        0.89569129, 0.39256879, 0.8783725 , 0.69078478, 0.98734876,
-                                0.75928245, 0.36454463, 0.50106317, 0.37638916, 0.36491184
-        };// (3, 10)
-        m__shapeBlendBasis = m__shapeBlendBasis_;
         cudaMalloc((void **) &d_poseBlendBasis, VERTEX_NUM * 3 * POSE_BASIS_DIM * sizeof(float));
         cudaMemcpy(d_poseBlendBasis, m__poseBlendBasis, VERTEX_NUM * 3 * POSE_BASIS_DIM * sizeof(float), cudaMemcpyHostToDevice);
-        cudaMalloc((void **) &d_shapeBlendBasis, VERTEX_NUM * 3 * SHAPE_BASIS_DIM * sizeof(float));
-        cudaMemcpy(d_shapeBlendBasis, m__shapeBlendBasis, VERTEX_NUM * 3 * SHAPE_BASIS_DIM * sizeof(float), cudaMemcpyHostToDevice);
-
         auto pbs = poseBlendShape(theta);
         auto d_poseRotation = std::get<0>(pbs);
         auto d_restPoseRotation = std::get<1>(pbs);
         auto d_poseBlendShape = std::get<2>(pbs);
 
-        auto d_shapeBlendShape = shapeBlendShape(beta);
-
         float *poseRotation = (float *)malloc(JOINT_NUM * 9 * sizeof(float)),
             *restPoseRotation = (float *)malloc(JOINT_NUM * 9 * sizeof(float)),
-            *poseBlendShape = (float *)malloc(VERTEX_NUM * 3 * sizeof(float)),
-            *shapeBlendShape = (float *)malloc(VERTEX_NUM * 3 * sizeof(float));
+            *poseBlendShape = (float *)malloc(VERTEX_NUM * 3 * sizeof(float));
         cudaMemcpy(poseRotation, d_poseRotation, JOINT_NUM * 9 * sizeof(float), cudaMemcpyDeviceToHost);
         cudaMemcpy(restPoseRotation, d_restPoseRotation, JOINT_NUM * 9 * sizeof(float), cudaMemcpyDeviceToHost);
         cudaMemcpy(poseBlendShape, d_poseBlendShape, VERTEX_NUM * 3 * sizeof(float), cudaMemcpyDeviceToHost);
-        cudaMemcpy(shapeBlendShape, d_shapeBlendShape, VERTEX_NUM * 3 * sizeof(float), cudaMemcpyDeviceToHost);
         
         cudaFree(d_poseRotation);
         cudaFree(d_restPoseRotation);
         cudaFree(d_poseBlendShape);
-        cudaFree(d_shapeBlendShape);
 
-        float r_shapeBlendShape[3] = {1.835449, 3.082224, 3.695877};
         float r_poseBlendShape[3] = {0.912995, -1.879041, -3.56463};
         float r_poseRotation[5][3][3] = {
                 {
@@ -232,8 +245,6 @@ namespace smpl {
         float r_restPoseRotation[3][3] = {{1., 0., 0.}, {0., 1., 0.}, {0., 0., 1.}};
 
         for (int i = 0; i < 3; i++)
-            EXPECT_NEAR(r_shapeBlendShape[i], shapeBlendShape[i], 0.000001);
-        for (int i = 0; i < 3; i++)
             EXPECT_NEAR(r_poseBlendShape[i], poseBlendShape[i], 0.000001);
 
         for (int i = 0; i < 5; i++)
@@ -244,13 +255,14 @@ namespace smpl {
             for (int k = 0; k < 3; k++)
                 EXPECT_NEAR(r_restPoseRotation[j][k], restPoseRotation[j * 3 + k], 0.000001);
 
-        free(shapeBlendShape);
         free(poseBlendShape);
         free(poseRotation);
         free(restPoseRotation);
 
         VERTEX_NUM = vertexNum;
     }
+
+
 
     TEST_F(SMPL, JointRegression){
         int vertexNum = VERTEX_NUM;
