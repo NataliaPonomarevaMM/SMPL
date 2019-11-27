@@ -39,7 +39,7 @@ namespace smpl {
         void init(std::string &modelPath);
         // Run the model with a specific group of beta, theta.
         float *lbs_for_model(float *beta, float *theta);
-        float *lbs_for_custom_vertices(float *beta, float *theta, float *vertex);
+        float *lbs_for_custom_vertices(float *beta, float *theta, float *vertices, int vertnum);
     };
 } // namespace smpl
 #endif // SMPL_H
