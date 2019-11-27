@@ -25,7 +25,7 @@ namespace smpl {
 
         float *shapeBlendShape = (float *)malloc(VERTEX_NUM * 3 * sizeof(float));
         cudaMemcpy(shapeBlendShape, d_shapeBlendShape, VERTEX_NUM * 3 * sizeof(float), cudaMemcpyDeviceToHost);
-        cudaFree(d_shapeBlendShape);
+        //cudaFree(d_shapeBlendShape);
 
         float r_shapeBlendShape[3] = {1.835449, 3.082224, 3.695877};
 
