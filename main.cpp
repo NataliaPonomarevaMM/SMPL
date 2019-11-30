@@ -13,9 +13,10 @@ int main(int argc, char const *argv[]) {
 
     smpl::SMPL model;
     auto begin = clk::now();
-    model.init("/home/nponomareva/DoubleFusion/data/smpl_female.json");
+    std::string model_path = "/home/nponomareva/DoubleFusion/data/smpl_female.json";
+    model.init(model_path);
     auto end = clk::now();
-    auto duration = std::chrono::duration_cast<mсs>(end - begin);
+    auto duration = std::chrono::duration_cast<mcs>(end - begin);
     std::cout << "Time duration to load SMPL: " << (double)duration.count() / 1000 << " ms" << std::endl;
 
     float theta[72] = {0}, beta[10] = {0};
@@ -26,7 +27,7 @@ int main(int argc, char const *argv[]) {
         beta[i] = rand();
 
     const int64_t LOOPS = 100;
-    duration = std::chrono::duration_cast<ms>(end - end);
+    duration = std::chrono::duration_cast<mcs>(end - end);
     for (int64_t i = 0; i < LOOPS; i++) {
         begin = clk::now();
         model.lbs_for_model(beta, theta);
