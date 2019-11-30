@@ -31,7 +31,7 @@ published by Max Planck Institute for Intelligent Systems on SIGGRAPH ASIA
       basicModel_f_lbs_10_207_0_v1.0.0.pkl
       basicmodel_m_lbs_10_207_0_v1.0.0.pkl
 
-  Run `preprocess.py` in [SMPL](SMPL/preprocess.py) with Python 2 to convert the data into `.json` and `. npz` format. 
+  Run `preprocess.py` in [SMPL](preprocess.py) with Python 2 to convert the data into `.json` and `. npz` format. 
 
 - Build and Run
 
