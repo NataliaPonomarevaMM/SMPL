@@ -3,23 +3,25 @@
 #include "../smpl.h"
 
 namespace smpl {
-    void SMPL::loadToDevice() {
+    void SMPL::loadToDevice(float *shapeBlendBasis, float *poseBlendBasis,
+            float *templateRestShape, float *jointRegressor,
+            int64_t *kinematicTree, float *weights) {
         ///BLEND SHAPE
         cudaMalloc((void **) &d_poseBlendBasis, VERTEX_NUM * 3 * POSE_BASIS_DIM * sizeof(float));
-        cudaMemcpy(d_poseBlendBasis, m__poseBlendBasis, VERTEX_NUM * 3 * POSE_BASIS_DIM * sizeof(float), cudaMemcpyHostToDevice);
+        cudaMemcpy(d_poseBlendBasis, poseBlendBasis, VERTEX_NUM * 3 * POSE_BASIS_DIM * sizeof(float), cudaMemcpyHostToDevice);
         cudaMalloc((void **) &d_shapeBlendBasis, VERTEX_NUM * 3 * SHAPE_BASIS_DIM * sizeof(float));
-        cudaMemcpy(d_shapeBlendBasis, m__shapeBlendBasis, VERTEX_NUM * 3 * SHAPE_BASIS_DIM * sizeof(float), cudaMemcpyHostToDevice);
+        cudaMemcpy(d_shapeBlendBasis, shapeBlendBasis, VERTEX_NUM * 3 * SHAPE_BASIS_DIM * sizeof(float), cudaMemcpyHostToDevice);
         ///REGRESS JOINTS
         cudaMalloc((void **) &d_templateRestShape, VERTEX_NUM * 3 * sizeof(float));
         cudaMalloc((void **) &d_jointRegressor, JOINT_NUM * VERTEX_NUM * sizeof(float));
-        cudaMemcpy(d_templateRestShape, m__templateRestShape, VERTEX_NUM * 3  * sizeof(float), cudaMemcpyHostToDevice);
-        cudaMemcpy(d_jointRegressor, m__jointRegressor, JOINT_NUM * VERTEX_NUM * sizeof(float), cudaMemcpyHostToDevice);
+        cudaMemcpy(d_templateRestShape, templateRestShape, VERTEX_NUM * 3  * sizeof(float), cudaMemcpyHostToDevice);
+        cudaMemcpy(d_jointRegressor, jointRegressor, JOINT_NUM * VERTEX_NUM * sizeof(float), cudaMemcpyHostToDevice);
         ///WORLD TRANSFORMATIONS
         cudaMalloc((void **) &d_kinematicTree, 2 * JOINT_NUM * sizeof(int64_t));
-        cudaMemcpy(d_kinematicTree, m__kinematicTree, 2 * JOINT_NUM * sizeof(int), cudaMemcpyHostToDevice);
+        cudaMemcpy(d_kinematicTree, kinematicTree, 2 * JOINT_NUM * sizeof(int), cudaMemcpyHostToDevice);
         ///SKINNING
         cudaMalloc((void **) &d_weights, VERTEX_NUM * JOINT_NUM * sizeof(float));
-        cudaMemcpy(d_weights, m__weights, VERTEX_NUM * JOINT_NUM * sizeof(float), cudaMemcpyHostToDevice);
+        cudaMemcpy(d_weights, weights, VERTEX_NUM * JOINT_NUM * sizeof(float), cudaMemcpyHostToDevice);
     }
 
     float *SMPL::run(float *beta, float *theta, float *d_custom_weights, float *d_vertices, float vertexnum) {
@@ -56,22 +58,6 @@ namespace smpl {
     }
 
     SMPL::~SMPL() {
-        ///CPU
-        if (m__faceIndices != nullptr)
-            free(m__faceIndices);
-        if (m__shapeBlendBasis != nullptr)
-            free(m__shapeBlendBasis);
-        if (m__poseBlendBasis != nullptr)
-            free(m__poseBlendBasis);
-        if (m__templateRestShape != nullptr)
-            free(m__templateRestShape);
-        if (m__jointRegressor != nullptr)
-            free(m__jointRegressor);
-        if (m__kinematicTree != nullptr)
-            free(m__kinematicTree);
-        if (m__weights != nullptr)
-            free(m__weights);
-        ///GPU
         if (d_poseBlendBasis != nullptr)
             cudaFree(d_poseBlendBasis);
         if (d_shapeBlendBasis != nullptr)

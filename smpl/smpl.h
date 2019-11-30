@@ -6,22 +6,19 @@
 #include "def.h"
 
 namespace smpl {
-    class SMPL : public ::testing::Test {
+    class SMPL {
     protected:
-        /// CPU
-        int32_t *m__faceIndices; // Vertex indices of each face, (13776, 3)
-        float *m__shapeBlendBasis; // Basis of the shape-dependent shape space, (6890, 3, 10).
-        float *m__poseBlendBasis; // Basis of the pose-dependent shape space, (6890, 3, 207).
-        float *m__templateRestShape; // Template shape in rest pose, (6890, 3).
-        float *m__jointRegressor; // Joint coefficients of each vertices for regressing them to joint locations, (24, 6890).
-        int64_t *m__kinematicTree; // Hierarchy relation between joints, the root is at the belly button, (2, 24).
-        float *m__weights; // Weights for linear blend skinning, (6890, 24).
-
         ///GPU
-        float *d_poseBlendBasis, *d_shapeBlendBasis, *d_templateRestShape, *d_jointRegressor, *d_weights;
-        int64_t *d_kinematicTree;
+        float *d_poseBlendBasis; // Basis of the pose-dependent shape space, (6890, 3, 207).
+        float *d_shapeBlendBasis; // Basis of the shape-dependent shape space, (6890, 3, 10).
+        float *d_templateRestShape; // Template shape in rest pose, (6890, 3).
+        float *d_jointRegressor; // Joint coefficients of each vertices for regressing them to joint locations, (24, 6890).
+        float *d_weights; // Hierarchy relation between joints, the root is at the belly button, (2, 24).
+        int64_t *d_kinematicTree; // Weights for linear blend skinning, (6890, 24).
 
-        void loadToDevice();
+        void loadToDevice(float *shapeBlendBasis, float *poseBlendBasis,
+                                float *templateRestShape, float *jointRegressor,
+                                int64_t *kinematicTree, float *weights);
 
         std::tuple<float *, float *, float *> poseBlendShape(float *theta);
         float *shapeBlendShape(float *beta);

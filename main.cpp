@@ -4,7 +4,7 @@
 #include <gtest/gtest.h>
 #include "smpl/smpl.h"
 
-using ms = std::chrono::milliseconds;
+using mcs = std::chrono::microseconds;
 using clk = std::chrono::system_clock;
 
 int main(int argc, char const *argv[]) {
@@ -15,8 +15,8 @@ int main(int argc, char const *argv[]) {
     auto begin = clk::now();
     model.init("/home/nponomareva/DoubleFusion/data/smpl_female.json");
     auto end = clk::now();
-    auto duration = std::chrono::duration_cast<ms>(end - begin);
-    std::cout << "Time duration to load SMPL: " << (double)duration.count() / 1000 << " s" << std::endl;
+    auto duration = std::chrono::duration_cast<mсs>(end - begin);
+    std::cout << "Time duration to load SMPL: " << (double)duration.count() / 1000 << " ms" << std::endl;
 
     float theta[72] = {0}, beta[10] = {0};
 
@@ -31,11 +31,11 @@ int main(int argc, char const *argv[]) {
         begin = clk::now();
         model.lbs_for_model(beta, theta);
         end = clk::now();
-        auto time = std::chrono::duration_cast<ms>(end - begin);
-        std::cout << i << ") SMPL: " << (double)time.count() << " ms" << std::endl;
+        auto time = std::chrono::duration_cast<mcs>(end - begin);
+        std::cout << i << ") SMPL: " << (double)time.count() << " mcs" << std::endl;
         duration += time;
     }
-    std::cout << "Time duration to run SMPL: " << (double)duration.count() / LOOPS << " ms" << std::endl;
+    std::cout << "Time duration to run SMPL: " << (double)duration.count() / LOOPS << " mcs" << std::endl;
 
     return 0;
 }
