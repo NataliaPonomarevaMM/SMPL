@@ -79,7 +79,7 @@ namespace smpl {
         device::FindKNN1<<<vertnum,VERTEX_NUM>>>(d_templateRestShape, d_shapeBlendShape, VERTEX_NUM, d_vertices, d_dist);
         device::FindKNN2<<<1,vertnum>>>(d_dist, VERTEX_NUM, d_ind);
         //now we can calculate weights
-        device::CalculateWeights<<<vertnum,JOINT_NUM>>>(d_dist, m__weights, d_ind,  JOINT_NUM, VERTEX_NUM, d_cur_weights);
+        device::CalculateWeights<<<vertnum,JOINT_NUM>>>(d_dist, d_weights, d_ind,  JOINT_NUM, VERTEX_NUM, d_cur_weights);
         cudaFree(d_shapeBlendShape);
         cudaFree(d_dist);
         cudaFree(d_ind);
