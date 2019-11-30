@@ -34,24 +34,26 @@ void func(bool with_reinit, int num_vert) {
             for (int i = 0; i < 10; i++)
                 beta[i] = rand();
         }
-        begin = clk::now();
 
+        begin = clk::now();
         if (num_vert == 0)
             model.lbs_for_model(beta, theta);
         else
             model.lbs_for_custom_vertices(beta, theta, vert, num_vert);
         end = clk::now();
         auto time = std::chrono::duration_cast<mcs>(end - begin);
-        duration += time;
+        if (i != 0)
+            duration += time;
         times[i] = (double)time.count();
+        std::cout << i << ") smpl " << times[i] << std::endl;
     }
-    double sr = (double)duration.count() / LOOPS;
+    double sr = (double)duration.count() / (LOOPS - 1.0);
     std::cout << "SR: " << sr << " mcs" << std::endl;
 
     double ds = 0;
-    for (int64_t i = 0; i < LOOPS; i++)
+    for (int64_t i = 1; i < LOOPS; i++)
         ds += (times[i] - sr) * (times[i] - sr);
-    ds /= LOOPS;
+    ds /= (LOOPS - 1.0);
     std::cout << "DISP: " << ds << " mcs" << std::endl;
 }
 
