@@ -24,7 +24,9 @@ void func(bool with_reinit, int num_vert) {
     double times[100];
 
     const int64_t LOOPS = 100;
-    duration = std::chrono::duration_cast<mcs>(end - end);
+    auto begin = clk::now();
+    auto end = clk::now();
+    auto duration = std::chrono::duration_cast<mcs>(end - end);
     for (int64_t i = 0; i < LOOPS; i++) {
         if (with_reinit) {
             for (int i = 0; i < 72; i++)
