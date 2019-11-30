@@ -54,7 +54,7 @@ namespace smpl {
     }
 
     float *SMPL::lbs_for_model(float *beta, float *theta) {
-        return run(beta, theta, m__weights);
+        return run(beta, theta, d_weights);
     }
 
     SMPL::~SMPL() {
