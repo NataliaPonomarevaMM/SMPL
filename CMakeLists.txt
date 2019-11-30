@@ -27,7 +27,7 @@ find_package(GTest REQUIRED)
 
 
 file(GLOB HEADER "smpl/*.h")
-file(GLOB SOURCE "*.cpp" "smpl/*.cpp" "tests/*.cpp" "smpl/cuda/*.cu" "tests/*.cu")
+file(GLOB SOURCE "*.cpp" "smpl/*.cpp" "smpl/cuda/*.cu")
 
 set(PROJECT_INCLUDE_DIRS
         ${SMPL_INCLUDE_DIRS}
