@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.10)
-project(DoubleFusion)
+project(SMPL)
 
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -30,7 +30,7 @@ file(GLOB HEADER "smpl/*.h")
 file(GLOB SOURCE "*.cpp" "smpl/*.cpp" "tests/*.cpp" "smpl/cuda/*.cu" "tests/*.cu")
 
 set(PROJECT_INCLUDE_DIRS
-        ${DOUBLE_FUSION_INCLUDE_DIRS}
+        ${SMPL_INCLUDE_DIRS}
         ${GLEW_INCLUDE_DIRS}
         ${xtensor_INCLUDE_DIRS}
         )
@@ -46,6 +46,6 @@ set(PROJECT_LIBRARIES
 
 set(CMAKE_EXE_LINKER_FLAGS "")
 
-add_executable(DoubleFusion ${HEADER} ${SOURCE} smpl/cuda/smpl_maths_cuda.cu tests/smpl_tests_cuda.cu)
-target_include_directories(DoubleFusion PRIVATE ${PROJECT_INCLUDE_DIRS})
-target_link_libraries(DoubleFusion ${PROJECT_LIBRARIES})
+add_executable(SMPL ${HEADER} ${SOURCE})
+target_include_directories(SMPL PRIVATE ${PROJECT_INCLUDE_DIRS})
+target_link_libraries(SMPL ${PROJECT_LIBRARIES})
